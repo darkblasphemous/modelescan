@@ -9,7 +9,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f9;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -17,11 +17,11 @@
             box-sizing: border-box;
         }
 
-        /* Dimensions et style de la carte blanche rigoureusement identiques à l'entrée */
+        /* Dimensions et marges intérieures rigoureusement alignées sur l'entrée */
         .card {
             background: white;
-            padding: 30px;
-            border-radius: 20px;
+            padding: 35px 30px;
+            border-radius: 24px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             width: 100%;
             max-width: 440px;
@@ -29,7 +29,7 @@
             box-sizing: border-box;
         }
 
-        /* Logo de la même taille (120px) */
+        /* Logo de la même taille */
         .logo {
             width: 120px;
             height: 120px;
@@ -41,7 +41,9 @@
         h2 {
             color: #1e293b;
             font-size: 22px;
-            margin-bottom: 25px;
+            margin-top: 0;
+            margin-bottom: 22px;
+            font-weight: 700;
         }
 
         /* Style de la barre de progression (chargement) */
@@ -79,7 +81,7 @@
             margin-bottom: 25px;
         }
 
-        /* Style de la photo du membre avec le même contour rond */
+        /* Style de la photo du membre strictement identique à l'entrée */
         .member-photo {
             width: 110px;
             height: 110px;
@@ -95,15 +97,15 @@
         .alert-box {
             background-color: #f97316;
             color: white;
-            padding: 22px;
-            border-radius: 12px;
+            padding: 22px 15px;
+            border-radius: 16px;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
         }
 
         .alert-box p {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
             margin: 0 0 10px 0;
             line-height: 1.4;
@@ -117,11 +119,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* Style des boutons */
+        /* Style des boutons alignés et de même hauteur */
         .btn-container {
             display: flex;
             gap: 12px;
             justify-content: center;
+            margin-top: 5px;
         }
 
         .btn {
@@ -130,14 +133,17 @@
             color: white;
             text-decoration: none;
             border: none;
-            padding: 14px 15px;
+            padding: 14px 10px;
             border-radius: 12px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 14px;
             text-align: center;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0, 102, 255, 0.2);
             transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn:hover {
@@ -198,11 +204,11 @@
                                 <img src="logo.png" alt="Logo ASTER" class="logo">
                                 <h2>Contrôle des Sorties</h2>
                                 ${photoHtml}
-                                <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                                    <p style="font-size: 18px; font-weight: bold; margin: 0;">Sortie validée avec succès !</p>
-                                    <h3 style="margin: 10px 0 0 0; font-size: 20px; text-transform: uppercase;">${data.nom}</h3>
+                                <div style="background-color: #22c55e; color: white; padding: 22px 15px; border-radius: 16px; margin-bottom: 20px;">
+                                    <p style="font-size: 16px; font-weight: bold; margin: 0 0 5px 0;">Sortie validée avec succès !</p>
+                                    <h3 style="margin: 0; font-size: 20px; text-transform: uppercase;">${data.nom}</h3>
                                 </div>
-                                <button class="btn" onclick="location.reload();">Scanner un autre</button>
+                                <button class="btn" style="width: 100%;" onclick="location.reload();">Scanner un autre</button>
                             `;
                         } else {
                             container.innerHTML = `
@@ -235,7 +241,7 @@
                                 <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
                                 <p style="font-size: 12px; margin-top: 5px;">ID : ${codeScanne}</p>
                             </div>
-                            <button class="btn" onclick="location.reload();">Réessayer</button>
+                            <button class="btn" style="width: 100%;" onclick="location.reload();">Réessayer</button>
                         `;
                     });
             }, 600);
