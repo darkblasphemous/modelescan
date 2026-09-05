@@ -29,16 +29,16 @@
     .card-container {
       max-width: 440px;
       width: 100%;
-      margin: 30px auto;
+      margin: 20px auto;
       background: #ffffff;
-      border-radius: 16px;
+      border-radius: 20px;
       padding: 30px 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
     }
 
     .logo-container {
       margin: 0 auto 15px auto;
-      max-width: 140px;
+      max-width: 120px;
       width: 100%;
     }
     
@@ -56,20 +56,43 @@
       font-weight: 700;
     }
 
-    .status-msg {
-      margin-top: 15px;
-      padding: 16px;
-      border-radius: 10px;
+    /* Style de la photo ronde du membre avec bordure verte */
+    .user-photo-container {
+      margin: 20px auto;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      padding: 4px;
+      background: #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      border: 3px solid #00b894;
+      display: none; /* Masqué par défaut tant qu'on charge */
+    }
+
+    .user-photo-container img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Boîtes de statut colorées (style des cartes de l'image) */
+    .status-box {
+      margin: 20px 0;
+      padding: 18px 15px;
+      border-radius: 12px;
       font-size: 1.05em;
       text-align: center;
-      font-weight: bold;
-      word-break: break-word;
+      font-weight: 600;
+      display: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
 
     .status-loading {
       background-color: #ebf8ff;
       color: #2b6cb0;
       border: 1px solid #bee3f8;
+      display: block;
     }
 
     .status-success {
@@ -79,15 +102,37 @@
     }
 
     .status-warning {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
+      background-color: #ff7f27; /* Orange vif similaire à votre capture */
+      color: #ffffff;
+      border: none;
     }
 
     .status-error {
       background-color: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
+    }
+
+    /* Bouton bleu "Scanner un autre" */
+    .btn-action {
+      display: none; /* Affiché une fois le résultat reçu */
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0,123,255,0.2);
+      transition: background-color 0.2s;
+    }
+
+    .btn-action:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
@@ -100,38 +145,67 @@
 
     <h2>Contrôle des Entrées</h2>
 
-    <!-- Zone de statut dynamique -->
-    <div id="statusMsg" class="status-msg status-loading">⏳ Analyse de l'identifiant en cours...</div>
+    <!-- Photo du membre (affichée au retour du serveur) -->
+    <div class="user-photo-container" id="photoContainer">
+      <img id="userPhoto" src="" alt="Photo membre">
+    </div>
+
+    <!-- Message de statut (Chargement, OK, Déjà scanné, Erreur) -->
+    <div id="statusMsg" class="status-box status-loading">⏳ Analyse de l'identifiant en cours...</div>
+
+    <!-- Bouton pour recommencer / fermer -->
+    <button id="btnAnother" class="btn-action" onclick="window.location.href='about:blank'">Fermer / Terminer</button>
   </div>
 
   <script>
-    // ⚠️ Remplacez cette URL par votre propre URL de déploiement Google Apps Script (/exec)
+    // ⚠️ Remplacez par votre URL de déploiement Google Apps Script (/exec)
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     const ACTION = "entree";
 
-    function afficherMessage(txt, type = "success") {
+    function afficherResultat(message, type, photoUrl) {
       const msgBox = document.getElementById("statusMsg");
-      msgBox.className = "status-msg";
-      
-      if (type === "success") msgBox.classList.add("status-success");
-      else if (type === "warning") msgBox.classList.add("status-warning");
-      else if (type === "error") msgBox.classList.add("status-error");
-      else msgBox.classList.add("status-loading");
+      const photoContainer = document.getElementById("photoContainer");
+      const userPhoto = document.getElementById("userPhoto");
+      const btnAnother = document.getElementById("btnAnother");
 
-      msgBox.innerText = txt;
+      // Afficher la boîte de message
+      msgBox.style.display = "block";
+      msgBox.className = "status-box";
+
+      if (type === "success") {
+        msgBox.classList.add("status-success");
+      } else if (type === "warning") {
+        msgBox.classList.add("status-warning");
+      } else if (type === "error") {
+        msgBox.classList.add("status-error");
+      } else {
+        msgBox.classList.add("status-loading");
+      }
+
+      msgBox.innerText = message;
+
+      // Afficher la photo si elle existe
+      if (photoUrl && photoUrl.trim() !== "") {
+        userPhoto.src = photoUrl;
+        photoContainer.style.display = "block";
+      } else {
+        photoContainer.style.display = "none";
+      }
+
+      // Afficher le bouton d'action en bas
+      btnAnother.style.display = "block";
     }
 
-    // Dès le chargement de la page, on récupère l'ID dans l'URL (?id=...)
+    // Au chargement de la page : récupération automatique de l'ID dans l'URL
     window.addEventListener("load", () => {
       const urlParams = new URLSearchParams(window.location.search);
       const idFromUrl = urlParams.get('id');
 
       if (!idFromUrl) {
-        afficherMessage("❌ Aucun identifiant (ID) trouvé dans ce lien.", "error");
+        afficherResultat("❌ Aucun identifiant (ID) trouvé dans ce lien.", "error", "");
         return;
       }
 
-      // Appel direct vers Google Apps Script avec l'action entrée et l'id
       const url = `${SCRIPT_URL}?action=${ACTION}&id=${encodeURIComponent(idFromUrl)}`;
 
       fetch(url)
@@ -141,16 +215,17 @@
         })
         .then(data => {
           if (data.status === "ok") {
-            afficherMessage(`✅ Entrée validée avec succès !\n\nMembre : ${data.name || idFromUrl}`, "success");
+            afficherResultat(`✅ Entrée validée avec succès !\n\n${data.name || idFromUrl}`, "success", data.photo);
           } else if (data.status === "already_scanned") {
-            afficherMessage(`⚠️ ${data.message}`, "warning");
+            // Reprend exactement le style orange de votre image
+            afficherResultat(`⚠️ ${data.name || 'Ce membre'} est déjà enregistré comme présent !`, "warning", data.photo);
           } else {
-            afficherMessage(`❌ ${data.message}`, "error");
+            afficherResultat(`❌ ${data.message}`, "error", data.photo);
           }
         })
         .catch(err => {
           console.error(err);
-          afficherMessage("❌ Impossible de joindre le serveur Google.", "error");
+          afficherResultat("❌ Impossible de joindre le serveur Google.", "error", "");
         });
     });
   </script>
