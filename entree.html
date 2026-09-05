@@ -1,65 +1,222 @@
-// --------------------------------------------------------------------------
-  // DEBUT SOUS-ACTION : 3. Enregistrement d'une entrée (entree)
-  // --------------------------------------------------------------------------
-  if (action === "entree") {
-    var code = e.parameter.code;
-    // 1. Récupération du paramètre callback pour le support JSONP
-    var callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrée - Scanner ASTER</title>
+  
+  <!-- Librairie ZXing pour le scanner -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 15px;
+      text-align: center;
+    }
+    h2 { color: #333; margin-bottom: 15px; }
     
-    var data = sheet.getDataRange().getValues();
-    var displayData = sheet.getDataRange().getDisplayValues();
-    var foundRow = -1;
-    var memberName = "";
-    var memberPhoto = "";
-    var arriveeExistante = "";
-    var heureExistanteAffichee = "";
+    .card {
+      max-width: 450px;
+      margin: 0 auto 15px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    #video-preview {
+      width: 100%;
+      height: 230px;
+      background-color: #000;
+      border-radius: 8px;
+      object-fit: cover;
+    }
 
-    var cleanCode = String(code).trim();
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
 
-    for (var i = 1; i < data.length; i++) {
-      var sheetId = String(data[i][6]).trim(); // Colonne G (ID-Unique)
-      if (sheetId === cleanCode) {
-        foundRow = i + 1;
-        memberName = (data[i][3] + " " + data[i][2]).trim(); // Prénom + Nom
-        memberPhoto = data[i][15];      // Colonne P (Photo)
-        arriveeExistante = data[i][10]; // Colonne K (Arrivée)
-        heureExistanteAffichee = formaterHeurePropre(data[i][10], displayData[i][10]);
-        break;
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background-color: #00b894;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #resultCard {
+      display: none;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+
+    .user-info img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #eee;
+    }
+
+    .user-info .name {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .status-box {
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .status-ok { background: #e6f9f5; color: #00b894; }
+    .status-already { background: #fff9e6; color: #d68910; }
+    .status-error { background: #ffecec; color: #d63031; }
+  </style>
+</head>
+<body>
+
+  <h2>Scanner - Entrée</h2>
+
+  <!-- Zone Zone Caméra + Saisie -->
+  <div class="card">
+    <video id="video-preview"></video>
+    
+    <div class="input-group">
+      <input type="text" id="manualCode" placeholder="Scanner ou saisir un ID...">
+      <button onclick="validerSaisieManuelle()">OK</button>
+    </div>
+  </div>
+
+  <!-- Zone Résultat -->
+  <div class="card" id="resultCard">
+    <div class="user-info">
+      <img id="userPhoto" src="https://via.placeholder.com/60" alt="Photo">
+      <div id="userName" class="name">--</div>
+    </div>
+    <div id="statusBox" class="status-box">--</div>
+  </div>
+
+  <script>
+    // ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL DE DEPLOIEMENT GOOGLE APPS SCRIPT !
+    const SCRIPT_URL = "https://script.google.com/macros/s/VOTRE_ID_DEPLOIEMENT/exec";
+
+    let codeReader = null;
+    let isProcessing = false;
+
+    // Initialisation au chargement de la page
+    window.addEventListener('load', function() {
+      try {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader.listVideoInputDevices().then((devices) => {
+          if (devices.length > 0) {
+            // Utilise la caméra arrière si disponible, sinon la première
+            const selectedId = devices.length > 1 ? devices[1].deviceId : devices[0].deviceId;
+            codeReader.decodeFromVideoDevice(selectedId, 'video-preview', (result) => {
+              if (result && !isProcessing) {
+                envoyerCodeBackend(result.text);
+              }
+            });
+          }
+        }).catch((err) => {
+          console.warn("Caméra non détectée ou permission refusée:", err);
+        });
+      } catch (err) {
+        console.error("Erreur d'initialisation du scanner:", err);
+      }
+    });
+
+    // Envoi manuel avec le bouton OK
+    function validerSaisieManuelle() {
+      const input = document.getElementById("manualCode");
+      const code = input.value.trim();
+      if (code && !isProcessing) {
+        envoyerCodeBackend(code);
+        input.value = "";
       }
     }
 
-    var responseObj = {};
+    // Fonction qui contacte Google Apps Script via JSONP
+    function envoyerCodeBackend(code) {
+      isProcessing = true;
+      const callbackName = "cb_" + Date.now();
 
-    if (foundRow !== -1) {
-      if (arriveeExistante && String(arriveeExistante).trim() !== "") {
-        responseObj = {
-          status: "already_scanned",
-          name: memberName,
-          photo: memberPhoto || "",
-          message: "Avertissement : Entrée déjà enregistrée aujourd'hui à " + (heureExistanteAffichee || "l'heure indiquée") + " !"
-        };
+      // Fonction callback appelée par Google Apps Script
+      window[callbackName] = function(data) {
+        nettoyerScript(callbackName);
+        afficherResultat(data);
+        setTimeout(() => { isProcessing = false; }, 3000); // Pause de 3 secondes avant le prochain scan
+      };
+
+      // Injection de la balise script pour éviter les blocages CORS
+      const script = document.createElement("script");
+      script.id = callbackName;
+      script.src = `${SCRIPT_URL}?action=entree&code=${encodeURIComponent(code)}&callback=${callbackName}`;
+      
+      script.onerror = function() {
+        nettoyerScript(callbackName);
+        afficherResultat({
+          status: "error",
+          name: "Erreur de connexion",
+          message: "Impossible de joindre le serveur. Vérifiez votre connexion Internet."
+        });
+        setTimeout(() => { isProcessing = false; }, 3000);
+      };
+
+      document.body.appendChild(script);
+    }
+
+    function nettoyerScript(id) {
+      delete window[id];
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function afficherResultat(data) {
+      const resultCard = document.getElementById("resultCard");
+      const userPhoto = document.getElementById("userPhoto");
+      const userName = document.getElementById("userName");
+      const statusBox = document.getElementById("statusBox");
+
+      resultCard.style.display = "block";
+      userName.innerText = data.name || "Membre inconnu";
+      userPhoto.src = (data.photo && data.photo.length > 10) ? data.photo : "https://via.placeholder.com/60?text=?";
+
+      statusBox.className = "status-box";
+
+      if (data.status === "ok") {
+        statusBox.classList.add("status-ok");
+      } else if (data.status === "already_scanned") {
+        statusBox.classList.add("status-already");
       } else {
-        var now = new Date();
-        sheet.getRange(foundRow, 11).setValue(now);     // Colonne K : Arrivée
-        sheet.getRange(foundRow, 10).setValue("Présent"); // Colonne J : Statut
-
-        responseObj = {
-          status: "ok",
-          name: memberName,
-          photo: memberPhoto || "",
-          message: "Entrée enregistrée avec succès"
-        };
+        statusBox.classList.add("status-error");
       }
-    } else {
-      responseObj = { status: "error", message: "Membre non trouvé (ID: " + cleanCode + ")." };
-    }
 
-    // 2. Gestion de la réponse : empaquetage dans la fonction callback si elle existe
-    var jsonString = JSON.stringify(responseObj);
-    if (callback) {
-      return ContentService.createTextOutput(callback + "(" + jsonString + ");")
-        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      statusBox.innerText = data.message || "";
     }
-    return ContentService.createTextOutput(jsonString)
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  </script>
+</body>
+</html>
