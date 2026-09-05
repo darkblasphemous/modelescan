@@ -27,7 +27,7 @@
             box-sizing: border-box;
         }
 
-        /* Style identique au logo rond de la page d'entrée */
+        /* Style du logo */
         .logo {
             width: 90px;
             height: 90px;
@@ -121,8 +121,8 @@
 <body>
 
     <div class="card" id="result-container">
-        <!-- Logo ASTER (Vérifiez si votre fichier s'appelle logo-aster.png ou logo.png) -->
-        <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+        <!-- Utilisation de logo.png -->
+        <img src="logo.png" alt="Logo ASTER" class="logo">
         <h2>Contrôle des Sorties</h2>
         
         <div class="loading-text" id="status-message">Vérification en cours...</div>
@@ -139,7 +139,7 @@
 
         if (!codeScanne) {
             container.innerHTML = `
-                <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+                <img src="logo.png" alt="Logo ASTER" class="logo">
                 <h2>Contrôle des Sorties</h2>
                 <div class="alert-box" style="background-color: #ef4444;">
                     <p>Erreur : Aucun identifiant (ID) fourni dans l'URL.</p>
@@ -157,7 +157,7 @@
 
                     if (data.status === "ok") {
                         container.innerHTML = `
-                            <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+                            <img src="logo.png" alt="Logo ASTER" class="logo">
                             <h2>Contrôle des Sorties</h2>
                             ${photoHtml}
                             <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
@@ -168,7 +168,7 @@
                         `;
                     } else {
                         container.innerHTML = `
-                            <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+                            <img src="logo.png" alt="Logo ASTER" class="logo">
                             <h2>Contrôle des Sorties</h2>
                             
                             ${photoHtml}
@@ -191,7 +191,7 @@
                 })
                 .catch(error => {
                     container.innerHTML = `
-                        <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+                        <img src="logo.png" alt="Logo ASTER" class="logo">
                         <h2>Contrôle des Sorties</h2>
                         <div class="alert-box" style="background-color: #ef4444;">
                             <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
