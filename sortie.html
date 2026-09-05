@@ -1,244 +1,13 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f4f6f9">
-
-  <title>Contrôle des Sorties - ASTER</title>
-
-  <style>
-    * {
-      box-sizing: border-box !important;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    html, body {
-      width: 100%;
-      margin: 0;
-      padding: 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f9;
-      text-align: center;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    .card-container {
-      max-width: 440px;
-      width: 100%;
-      margin: 20px auto;
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 30px 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-    }
-
-    .logo-container {
-      margin: 0 auto 15px auto;
-      max-width: 120px;
-      width: 100%;
-    }
-    
-    .logo-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-
-    h2 {
-      color: #2d3748;
-      margin: 5px 0 20px 0;
-      font-size: 1.35em;
-      font-weight: 700;
-    }
-
-    /* Style pour la jauge de progression interactive */
-    .progress-bar-container {
-      width: 100%;
-      height: 8px;
-      background-color: #e2e8f0;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 15px 0 5px 0;
-      display: none;
-    }
-
-    .progress-bar-fill {
-      width: 0%;
-      height: 100%;
-      background-color: #007bff;
-      border-radius: 4px;
-      transition: width 0.4s ease;
-      animation: pulse-bar 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse-bar {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
-    }
-
-    .user-photo-container {
-      margin: 20px auto;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      padding: 4px;
-      background: #ffffff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-      border: 3px solid #00b894;
-      display: none;
-    }
-
-    .user-photo-container img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .status-box {
-      margin: 20px 0;
-      padding: 22px 15px;
-      border-radius: 12px;
-      text-align: center;
-      display: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      font-weight: bold;
-      color: #ffffff;
-    }
-
-    .status-loading {
-      background-color: #ebf8ff;
-      color: #2b6cb0;
-      border: 1px solid #bee3f8;
-      display: block;
-      font-weight: normal;
-    }
-
-    .status-success {
-      background-color: #00b074;
-    }
-
-    .status-warning {
-      background-color: #ff7f27;
-    }
-
-    .status-error {
-      background-color: #e53e3e;
-    }
-
-    .msg-title {
-      font-size: 1.05em;
-      letter-spacing: 0.3px;
-      margin-bottom: 8px;
-    }
-
-    .msg-name {
-      font-size: 1.3em;
-      text-transform: uppercase;
-      margin-top: 6px;
-      font-weight: 800;
-    }
-
-    .msg-time {
-      font-size: 0.85em;
-      font-weight: 400;
-      opacity: 0.9;
-      margin-top: 6px;
-    }
-
-    .btn-action {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-      text-decoration: none;
-      box-shadow: 0 4px 10px rgba(0,123,255,0.2);
-      transition: background-color 0.2s;
-    }
-
-    .btn-action:hover {
-      background-color: #0056b3;
-    }
-
-    .btn-grid {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .btn-grid .btn-action {
-      flex: 1;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="card-container">
-    <div class="logo-container">
-      <img src="logo.png" alt="Logo ASTER" id="app-logo">
-    </div>
-
-    <h2>Contrôle des Sorties</h2>
-
-    <div class="progress-bar-container" id="progressBarContainer">
-      <div class="progress-bar-fill" id="progressBarFill"></div>
-    </div>
-
-    <div class="user-photo-container" id="photoContainer">
-      <img id="userPhoto" src="" alt="Photo membre">
-    </div>
-
-    <div id="statusMsg" class="status-box status-loading">Scannez le badge du membre pour valider la sortie</div>
-
-    <div id="actionButtons">
-      <button class="btn-action" onclick="window.close()">Fermer / Terminer</button>
-    </div>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
-    const ACTION = "sortie";
-    const URL_FORMULAIRE_ENQUETE = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform";
-
-    function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl, statusType) {
+function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
       const msgBox = document.getElementById("statusMsg");
       const photoContainer = document.getElementById("photoContainer");
-      const userPhoto = document.getElementById("userPhoto");
-      const btnContainer = document.getElementById("actionButtons");
-      const progressContainer = document.getElementById("progressBarContainer");
-      const progressFill = document.getElementById("progressBarFill");
-
+      const userPhoto = document.getElementById("userPhoto"); 
+      
+      // Sécurité : si l'élément n'existe pas encore dans la page, on arrête pour éviter le bug
       if (!msgBox) return;
 
       msgBox.style.display = "block";
       msgBox.className = "status-box";
-
-      if (type === "loading") {
-        if (progressContainer && progressFill) {
-          progressContainer.style.display = "block";
-          progressFill.style.width = "75%";
-        }
-        msgBox.classList.add("status-loading");
-        msgBox.innerText = titre;
-        return;
-      } else {
-        if (progressContainer && progressFill) {
-          progressFill.style.width = "100%";
-          setTimeout(() => { progressContainer.style.display = "none"; }, 300);
-        }
-      }
 
       if (type === "success") {
         msgBox.classList.add("status-success");
@@ -246,14 +15,20 @@
         msgBox.classList.add("status-warning");
       } else if (type === "error") {
         msgBox.classList.add("status-error");
+      } else {
+        msgBox.classList.add("status-loading");
       }
 
-      let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
-      msgBox.innerHTML = `
-        <div class="msg-title">${titre}</div>
-        <div class="msg-name">${nom}</div>
-        ${heureHtml}
-      `;
+      if (type === "loading") {
+        msgBox.innerText = titre;
+      } else {
+        let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
+        msgBox.innerHTML = `
+          <div class="msg-title">${titre}</div>
+          <div class="msg-name">${nom}</div>
+          ${heureHtml}
+        `;
+      } 
 
       if (photoContainer && userPhoto) {
         if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
@@ -263,63 +38,4 @@
           photoContainer.style.display = "none";
         }
       }
-
-      if (btnContainer) {
-        if (statusType === "require_survey") {
-          let formUrlWithId = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.648947853=${encodeURIComponent(idMembre)}`;
-          btnContainer.innerHTML = `
-            <div class="btn-grid">
-              <a href="${formUrlWithId}" class="btn-action" style="text-align: center;">Remplir l'enquête</a>
-              <button class="btn-action" onclick="location.reload()">Scanner un autre</button>
-            </div>
-          `;
-        } else {
-          btnContainer.innerHTML = `
-            <button class="btn-action" onclick="window.close()" style="margin-top: 15px;">Fermer / Terminer</button>
-          `;
-        }
-      }
     }
-
-    window.addEventListener("load", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('id') || urlParams.get('code');
-
-      if (!memberId) {
-        afficherResultat("❌ ERREUR", "Aucun identifiant", "Inconnu", "", "error", "", "");
-        return;
-      }
-
-      afficherResultat("Vérification en cours...", "", memberId, "", "loading", "", "");
-
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
-
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error("Erreur réseau");
-          return res.json();
-        })
-        .then(data => {
-          const nomMembre = data.name || memberId;
-          const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-          if (data.status === "ok") {
-            afficherResultat("✓ SORTIE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo, "ok");
-          } else if (data.status === "require_survey") {
-            afficherResultat("⚠ Veuillez remplir l'enquête de satisfaction avant de sortir.", nomMembre, memberId, "", "warning", data.photo, "require_survey");
-          } else if (data.status === "no_entry") {
-            afficherResultat("⚠ Impossible de pointer la sortie : aucune entrée enregistrée.", nomMembre, memberId, "", "warning", data.photo, "no_entry");
-          } else if (data.status === "already_scanned") {
-            afficherResultat("⚠ Ce membre est déjà enregistré comme sorti !", nomMembre, memberId, nowTime, "warning", data.photo, "already_scanned");
-          } else {
-            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo, "");
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", memberId, "", "error", "", "");
-        });
-    });
-  </script>
-</body>
-</html>
