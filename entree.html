@@ -9,8 +9,6 @@
   <meta name="theme-color" content="#f4f6f9">
 
   <title>Contrôle des Entrées - ASTER</title>
-  
-  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     * {
@@ -31,7 +29,7 @@
     .card-container {
       max-width: 440px;
       width: 100%;
-      margin: 10px auto;
+      margin: 20px auto;
       background: #ffffff;
       border-radius: 16px;
       padding: 24px 20px;
@@ -53,41 +51,59 @@
 
     h2 {
       color: #2d3748;
-      margin: 5px 0 15px 0;
+      margin: 5px 0 20px 0;
       font-size: 1.35em;
       font-weight: 700;
     }
 
-    .scanner-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #1a202c;
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    #reader {
-      width: 100%;
+    input[type="text"] {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #00b894;
+    }
+
+    button {
+      padding: 14px 20px;
+      background-color: #00b894;
+      color: white;
       border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
 
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 12px;
+    button:hover {
+      background-color: #00a181;
     }
 
     .subtitle {
       color: #718096;
-      font-size: 0.85em;
+      font-size: 0.9em;
       margin-top: 15px;
       margin-bottom: 0;
     }
 
     .status-msg {
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.9em;
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.95em;
       text-align: center;
       display: none;
       font-weight: bold;
@@ -97,6 +113,12 @@
       background-color: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
+    }
+
+    .status-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
     }
 
     .status-error {
@@ -115,11 +137,15 @@
 
     <h2>Contrôle des Entrées</h2>
 
-    <div class="scanner-wrapper">
-      <div id="reader"></div>
-    </div>
+    <!-- Formulaire de saisie manuelle ou douchette -->
+    <form onsubmit="validerSaisie(event)">
+      <div class="input-group">
+        <input type="text" id="manualCode" placeholder="ID ou scan douchette..." autofocus autocomplete="off">
+        <button type="submit">Valider</button>
+      </div>
+    </form>
 
-    <p class="subtitle">Scannez le badge du membre pour valider l'entrée</p>
+    <p class="subtitle">Scannez un badge ou entrez l'identifiant</p>
 
     <div id="statusMsg" class="status-msg"></div>
   </div>
@@ -128,76 +154,65 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     const ACTION = "entree";
     
-    let html5QrCode = null;
     let isProcessing = false;
 
-    function afficherMessage(txt, error = false) {
+    function afficherMessage(txt, type = "success") {
       const msgBox = document.getElementById("statusMsg");
       msgBox.style.display = "block";
-      msgBox.className = "status-msg " + (error ? "status-error" : "status-success");
+      msgBox.className = "status-msg";
+      
+      if (type === "success") msgBox.classList.add("status-success");
+      else if (type === "warning") msgBox.classList.add("status-warning");
+      else msgBox.classList.add("status-error");
+
       msgBox.innerText = txt;
     }
 
-    function traiterCode(codeId) {
-      if (isProcessing) return;
+    function envoyerAuBackend(codeId) {
+      if (!codeId || isProcessing) return;
       isProcessing = true;
 
-      afficherMessage("Validation en cours...", false);
+      afficherMessage("Validation en cours...", "success");
 
-      // Si le code scanné est une URL complète contenant ?id=... on extrait l'ID proprement
-      let cleanId = codeId;
-      try {
-        if (codeId.includes("?")) {
-          const urlObj = new URL(codeId);
-          const paramId = urlObj.searchParams.get("id");
-          if (paramId) cleanId = paramId;
-        }
-      } catch (e) {
-        // Ce n'est pas une URL, on garde le texte brut (ex: ID simple)
-      }
-
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(cleanId)}`;
+      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(codeId)}`;
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
           if (data.status === "ok") {
-            afficherMessage(`✅ Entrée validée : ${data.name}`);
+            afficherMessage(`✅ Entrée validée : ${data.name || codeId}`);
           } else if (data.status === "already_scanned") {
             afficherMessage(`⚠️ ${data.message}`);
           } else {
-            afficherMessage(`❌ ${data.message}`, true);
+            afficherMessage(`❌ ${data.message}`, "error");
           }
         })
-        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", true))
+        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", "error"))
         .finally(() => {
-          setTimeout(() => { isProcessing = false; }, 2500);
+          isProcessing = false;
+          const input = document.getElementById("manualCode");
+          input.value = "";
+          input.focus();
         });
     }
 
+    function validerSaisie(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById("manualCode");
+      envoyerAuBackend(input.value.trim());
+    }
+
+    // Au chargement de la page : vérifie si l'URL contient un paramètre ?id=... (QR code cliqué)
     window.addEventListener("load", () => {
-      // 1. Vérifier si l'URL contient directement un paramètre ?id=... (Ouverture directe par lien)
       const urlParams = new URLSearchParams(window.location.search);
       const idFromUrl = urlParams.get('id');
 
       if (idFromUrl) {
-        traiterCode(idFromUrl);
+        document.getElementById("manualCode").value = idFromUrl;
+        envoyerAuBackend(idFromUrl);
+      } else {
+        document.getElementById("manualCode").focus();
       }
-
-      // 2. Initialiser la caméra pour le scan en direct des QR codes
-      html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-          traiterCode(decodedText);
-        }
-      ).catch(err => {
-        // Si la caméra échoue (ex: refus ou absence de caméra), on affiche un message discret mais le lien URL fonctionnera toujours
-        console.warn("Caméra non disponible :", err);
-      });
     });
   </script>
 </body>
