@@ -120,23 +120,22 @@
     }
 
     .msg-time {
-      font-size: 0.78em;
+      font-size: 0.85em;
       font-weight: 400;
-      opacity: 0.85;
+      opacity: 0.9;
       margin-top: 6px;
     }
 
     .btn-action {
       display: block;
       width: 100%;
-      margin-top: 12px;
       padding: 14px;
       background-color: #007bff;
       color: white;
       border: none;
       border-radius: 12px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
       text-decoration: none;
       box-shadow: 0 4px 10px rgba(0,123,255,0.2);
@@ -147,10 +146,14 @@
       background-color: #0056b3;
     }
 
-    .btn-container {
+    .btn-grid {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-grid .btn-action {
+      flex: 1;
     }
   </style>
 </head>
@@ -169,7 +172,7 @@
 
     <div id="statusMsg" class="status-box status-loading">Scannez le badge du membre pour valider la sortie</div>
 
-    <div class="btn-container" id="actionButtons">
+    <div id="actionButtons">
       <button class="btn-action" onclick="window.close()">Fermer / Terminer</button>
     </div>
   </div>
@@ -216,16 +219,18 @@
         photoContainer.style.display = "none";
       }
 
-      // Gestion dynamique des boutons selon le cas de figure
+      // Configuration des boutons avec l'ID du membre pré-rempli via entry.648947853
       if (statusType === "require_survey") {
-        let formUrlWithId = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.123456789=${encodeURIComponent(idMembre)}`;
+        let formUrlWithId = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.648947853=${encodeURIComponent(idMembre)}`;
         btnContainer.innerHTML = `
-          <a href="${formUrlWithId}" class="btn-action" style="background-color: #007bff; text-align: center; display: block;">Remplir l'enquête</a>
-          <button class="btn-action" style="background-color: #6c757d;" onclick="location.reload()">Scanner un autre</button>
+          <div class="btn-grid">
+            <a href="${formUrlWithId}" class="btn-action" style="text-align: center;">Remplir l'enquête</a>
+            <button class="btn-action" onclick="location.reload()">Scanner un autre</button>
+          </div>
         `;
       } else {
         btnContainer.innerHTML = `
-          <button class="btn-action" onclick="window.close()">Fermer / Terminer</button>
+          <button class="btn-action" onclick="window.close()" style="margin-top: 15px;">Fermer / Terminer</button>
         `;
       }
     }
