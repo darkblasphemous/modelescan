@@ -99,7 +99,7 @@
     }
 
     .status-warning {
-      background-color: #ff7f27;
+      background-color: #ff7f27; /* La couleur orange demandée pour le message d'alerte */
     }
 
     .status-error {
@@ -107,37 +107,29 @@
     }
 
     .msg-title {
-      font-size: 1.1em;
-      letter-spacing: 0.5px;
+      font-size: 1.05em;
+      letter-spacing: 0.3px;
       margin-bottom: 8px;
     }
 
     .msg-name {
-      font-size: 1.4em;
-      text-transform: lowercase;
-      margin-bottom: 8px;
+      font-size: 1.3em;
+      text-transform: uppercase;
+      margin-top: 6px;
       font-weight: 800;
     }
 
-    .msg-id {
-      font-size: 0.95em;
-      font-weight: 600;
-      opacity: 0.95;
-      margin-bottom: 6px;
-    }
-
-    /* Style pour l'heure en tout petit */
     .msg-time {
       font-size: 0.78em;
       font-weight: 400;
       opacity: 0.85;
-      letter-spacing: 0.3px;
+      margin-top: 6px;
     }
 
     .btn-action {
       display: block;
       width: 100%;
-      margin-top: 20px;
+      margin-top: 12px;
       padding: 14px;
       background-color: #007bff;
       color: white;
@@ -154,6 +146,12 @@
     .btn-action:hover {
       background-color: #0056b3;
     }
+
+    .btn-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
   </style>
 </head>
 <body>
@@ -169,13 +167,15 @@
       <img id="userPhoto" src="" alt="Photo membre">
     </div>
 
-    <div id="statusMsg" class="status-box status-loading">⏳ Analyse de l'identifiant en cours...</div>
+    <div id="statusMsg" class="status-box status-loading">Scannez le badge du membre pour valider l'entrée</div>
 
-    <button id="btnAnother" class="btn-action" onclick="window.close()">Fermer / Terminer</button>
+    <div class="btn-container" id="actionButtons">
+      <button class="btn-action" onclick="window.close()">Fermer / Terminer</button>
+    </div>
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/exec";
+    const SCRIPT_URL = "VOTRE_URL_DEPLOIEMENT_APPS_SCRIPT";
     const ACTION = "entree";
 
     function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
@@ -199,12 +199,10 @@
       if (type === "loading") {
         msgBox.innerText = titre;
       } else {
-        // Ajout de l'heure en tout petit sous l'ID
         let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
         msgBox.innerHTML = `
           <div class="msg-title">${titre}</div>
           <div class="msg-name">${nom}</div>
-          <div class="msg-id">ID : ${idMembre}</div>
           ${heureHtml}
         `;
       }
@@ -222,7 +220,7 @@
       const memberId = urlParams.get('id') || urlParams.get('code');
 
       if (!memberId) {
-        afficherResultat("ERREUR", "Aucun identifiant", "Inconnu", "", "error", "");
+        afficherResultat("❌ ERREUR", "Aucun identifiant", "Inconnu", "", "error", "");
         return;
       }
 
@@ -235,15 +233,13 @@
         })
         .then(data => {
           const nomMembre = data.name || memberId;
-          
-          // Récupération de l'heure actuelle locale si c'est un succès, ou extraction du message si déjà scanné
           const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
           if (data.status === "ok") {
             afficherResultat("✓ ENTRÉE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
           } else if (data.status === "already_scanned") {
-            // Extrait l'heure du message renvoyé par le script si elle y est
-            afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, memberId, nowTime, "warning", data.photo);
+            // Reprend exactement l'affichage orange de votre capture avec le nom et le message d'avertissement
+            afficherResultat("⚠ " + nomMembre + " est déjà enregistré comme présent !", "", memberId, nowTime, "warning", data.photo);
           } else {
             afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo);
           }
