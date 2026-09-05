@@ -1,275 +1,65 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f4f6f9">
-
-  <title>Entrée - Scanner ASTER</title>
-  
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
-
-  <style>
-    * {
-      box-sizing: border-box !important;
-      -webkit-tap-highlight-color: transparent;
-    }
+// --------------------------------------------------------------------------
+  // DEBUT SOUS-ACTION : 3. Enregistrement d'une entrée (entree)
+  // --------------------------------------------------------------------------
+  if (action === "entree") {
+    var code = e.parameter.code;
+    // 1. Récupération du paramètre callback pour le support JSONP
+    var callback = e && e.parameter && e.parameter.callback ? e.parameter.callback : "";
     
-    html, body {
-      width: 100%;
-      margin: 0;
-      padding: 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f9;
-      text-align: center;
-    }
+    var data = sheet.getDataRange().getValues();
+    var displayData = sheet.getDataRange().getDisplayValues();
+    var foundRow = -1;
+    var memberName = "";
+    var memberPhoto = "";
+    var arriveeExistante = "";
+    var heureExistanteAffichee = "";
 
-    .logo-container {
-      margin: 5px auto 10px auto;
-      max-width: 150px;
-      width: 100%;
-    }
-    
-    .logo-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
+    var cleanCode = String(code).trim();
 
-    h2 {
-      color: #333;
-      margin: 5px 0 10px 0;
-      font-size: 1.3em;
-    }
-
-    .scanner-card {
-      max-width: 480px;
-      width: 100%;
-      margin: 0 auto 15px auto;
-      background: white;
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-
-    #video-preview {
-      width: 100%;
-      max-height: 250px;
-      border-radius: 8px;
-      object-fit: cover;
-      background-color: #222;
-    }
-
-    .manual-input-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .manual-input-group input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.9em;
-      outline: none;
-    }
-
-    .manual-input-group button {
-      padding: 10px 16px;
-      background: #00b894;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .result-card {
-      display: none;
-      max-width: 480px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .user-profile {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .user-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #ddd;
-      background-color: #eee;
-    }
-
-    .user-name {
-      font-size: 1.1em;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .alert-box {
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 0.9em;
-      font-weight: 500;
-      margin-top: 5px;
-    }
-
-    .alert-box.success {
-      background-color: #e6f9f5;
-      color: #00b894;
-      border: 1px solid #00b894;
-    }
-
-    .alert-box.warning {
-      background-color: #fff9e6;
-      color: #d68910;
-      border: 1px solid #f39c12;
-    }
-
-    .alert-box.error {
-      background-color: #ffecec;
-      color: #d63031;
-      border: 1px solid #d63031;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="logo-container">
-    <img src="logo.png" alt="Logo ASTER" id="app-logo">
-  </div>
-
-  <h2>Scanner Entrée</h2>
-
-  <div class="scanner-card">
-    <video id="video-preview"></video>
-    
-    <div class="manual-input-group">
-      <input type="text" id="manualCode" placeholder="Saisir un ID / Badge...">
-      <button onclick="validerCodeManuel()">OK</button>
-    </div>
-  </div>
-
-  <div class="result-card" id="resultCard">
-    <div class="user-profile">
-      <img id="userPhoto" class="user-avatar" src="https://via.placeholder.com/80?text=?" alt="Photo">
-      <div id="userName" class="user-name">--</div>
-    </div>
-    <div id="alertBox" class="alert-box">--</div>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
-    
-    let codeReader = null;
-    let isProcessing = false;
-
-    window.addEventListener('load', function () {
-      try {
-        codeReader = new ZXing.BrowserMultiFormatReader();
-        codeReader.listVideoInputDevices()
-          .then((videoInputDevices) => {
-            if (videoInputDevices.length > 0) {
-              const selectedDeviceId = videoInputDevices.length > 1 ? videoInputDevices[1].deviceId : videoInputDevices[0].deviceId;
-              codeReader.decodeFromVideoDevice(selectedDeviceId, 'video-preview', (result, err) => {
-                if (result && !isProcessing) {
-                  envoyerEntreeJSONP(result.text);
-                }
-              });
-            }
-          })
-          .catch((err) => {
-            console.warn("Caméra indisponible ou permission refusée:", err);
-          });
-      } catch (e) {
-        console.error("Erreur initialisation ZXing:", e);
-      }
-    });
-
-    function validerCodeManuel() {
-      const codeInput = document.getElementById("manualCode");
-      const val = codeInput.value.trim();
-      if (val && !isProcessing) {
-        envoyerEntreeJSONP(val);
-        codeInput.value = "";
+    for (var i = 1; i < data.length; i++) {
+      var sheetId = String(data[i][6]).trim(); // Colonne G (ID-Unique)
+      if (sheetId === cleanCode) {
+        foundRow = i + 1;
+        memberName = (data[i][3] + " " + data[i][2]).trim(); // Prénom + Nom
+        memberPhoto = data[i][15];      // Colonne P (Photo)
+        arriveeExistante = data[i][10]; // Colonne K (Arrivée)
+        heureExistanteAffichee = formaterHeurePropre(data[i][10], displayData[i][10]);
+        break;
       }
     }
 
-    function envoyerEntreeJSONP(code) {
-      isProcessing = true;
-      const callbackName = "handleEntreeResponse_" + Math.floor(Math.random() * 100000);
+    var responseObj = {};
 
-      window[callbackName] = function(data) {
-        delete window[callbackName];
-        const script = document.getElementById(callbackName);
-        if (script) script.remove();
-
-        afficherResultat(data);
-
-        setTimeout(() => {
-          isProcessing = false;
-        }, 3500);
-      };
-
-      const scriptTag = document.createElement("script");
-      scriptTag.id = callbackName;
-      scriptTag.src = `${SCRIPT_URL}?action=entree&code=${encodeURIComponent(code)}&callback=${callbackName}`;
-
-      scriptTag.onerror = function() {
-        delete window[callbackName];
-        scriptTag.remove();
-        afficherResultat({
-          status: "error",
-          name: "Erreur Réseau",
-          photo: "",
-          message: "Impossible de contacter le serveur."
-        });
-        setTimeout(() => { isProcessing = false; }, 3500);
-      };
-
-      document.body.appendChild(scriptTag);
-    }
-
-    function afficherResultat(data) {
-      const card = document.getElementById("resultCard");
-      const userPhoto = document.getElementById("userPhoto");
-      const userName = document.getElementById("userName");
-      const alertBox = document.getElementById("alertBox");
-
-      card.style.display = "block";
-
-      userName.innerText = data.name || "Membre Inconnu";
-      userPhoto.src = (data.photo && data.photo.length > 5) ? data.photo : "https://via.placeholder.com/80?text=?";
-
-      alertBox.className = "alert-box";
-
-      if (data.status === "ok") {
-        alertBox.classList.add("success");
-        alertBox.innerText = data.message || "Entrée enregistrée avec succès";
-      } else if (data.status === "already_scanned") {
-        alertBox.classList.add("warning");
-        alertBox.innerText = data.message || "Entrée déjà enregistrée !";
+    if (foundRow !== -1) {
+      if (arriveeExistante && String(arriveeExistante).trim() !== "") {
+        responseObj = {
+          status: "already_scanned",
+          name: memberName,
+          photo: memberPhoto || "",
+          message: "Avertissement : Entrée déjà enregistrée aujourd'hui à " + (heureExistanteAffichee || "l'heure indiquée") + " !"
+        };
       } else {
-        alertBox.classList.add("error");
-        alertBox.innerText = data.message || "Membre non trouvé";
+        var now = new Date();
+        sheet.getRange(foundRow, 11).setValue(now);     // Colonne K : Arrivée
+        sheet.getRange(foundRow, 10).setValue("Présent"); // Colonne J : Statut
+
+        responseObj = {
+          status: "ok",
+          name: memberName,
+          photo: memberPhoto || "",
+          message: "Entrée enregistrée avec succès"
+        };
       }
+    } else {
+      responseObj = { status: "error", message: "Membre non trouvé (ID: " + cleanCode + ")." };
     }
-  </script>
-</body>
-</html>
+
+    // 2. Gestion de la réponse : empaquetage dans la fonction callback si elle existe
+    var jsonString = JSON.stringify(responseObj);
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + jsonString + ");")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(jsonString)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
