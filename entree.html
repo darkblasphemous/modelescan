@@ -99,7 +99,7 @@
     }
 
     .status-warning {
-      background-color: #ff7f27; /* La couleur orange demandée pour le message d'alerte */
+      background-color: #ff7f27;
     }
 
     .status-error {
@@ -120,9 +120,9 @@
     }
 
     .msg-time {
-      font-size: 0.78em;
+      font-size: 0.85em;
       font-weight: 400;
-      opacity: 0.85;
+      opacity: 0.9;
       margin-top: 6px;
     }
 
@@ -175,7 +175,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "VOTRE_URL_DEPLOIEMENT_APPS_SCRIPT";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
     const ACTION = "entree";
 
     function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
@@ -238,7 +238,6 @@
           if (data.status === "ok") {
             afficherResultat("✓ ENTRÉE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
           } else if (data.status === "already_scanned") {
-            // Reprend exactement l'affichage orange de votre capture avec le nom et le message d'avertissement
             afficherResultat("⚠ " + nomMembre + " est déjà enregistré comme présent !", "", memberId, nowTime, "warning", data.photo);
           } else {
             afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo);
