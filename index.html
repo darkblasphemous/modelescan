@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle d'Entrée - ASTER SCAN</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: #f4f4f9;
+        }
+        .logo {
+            max-width: 160px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        h1 { font-size: 22px; color: #333; margin-top: 0; }
+        #reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" alt="Logo ASTER" class="logo">
+    <h1>Contrôle des Entrées</h1>
+    <div id="reader"></div>
+
+    <script>
+        let html5QrCode;
+
+        function surScanReussi(decodedText) {
+            html5QrCode.stop().then(() => {
+                let id = decodedText;
+                try {
+                    if (decodedText.includes('?')) {
+                        const urlObj = new URL(decodedText);
+                        id = urlObj.searchParams.get('id') || urlObj.searchParams.get('code') || decodedText;
+                    }
+                } catch (e) {
+                    // Garde le texte brut si ce n'est pas une URL
+                }
+
+                // Redirige vers ta page web GitHub 'entree.html' avec le code scanné
+                window.location.href = `entree.html?code=${encodeURIComponent(id)}`;
+            }).catch(err => console.error(err));
+        }
+
+        function demarrerCamera() {
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: 250 },
+                surScanReussi
+            ).catch(err => {
+                console.error("Erreur caméra : " + err);
+                alert("Erreur caméra : impossible d'accéder à la caméra (vérifiez les autorisations HTTPS).");
+            });
+        }
+
+        window.onload = demarrerCamera;
+    </script>
+</body>
+</html>
