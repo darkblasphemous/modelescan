@@ -209,7 +209,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxURL aspscript icixxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     let tousLesMembres = [];
 
     function chargerMembresJSONP() {
