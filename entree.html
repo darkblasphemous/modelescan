@@ -94,12 +94,10 @@
       font-weight: normal;
     }
 
-    /* Le vert exact demandé */
     .status-success {
       background-color: #00b074;
     }
 
-    /* Le orange vif pour déjà scanné */
     .status-warning {
       background-color: #ff7f27;
     }
@@ -108,7 +106,6 @@
       background-color: #e53e3e;
     }
 
-    /* Mise en forme interne du message (Titre / Nom / ID) */
     .msg-title {
       font-size: 1.1em;
       letter-spacing: 0.5px;
@@ -118,7 +115,7 @@
     .msg-name {
       font-size: 1.4em;
       text-transform: lowercase;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-weight: 800;
     }
 
@@ -126,6 +123,15 @@
       font-size: 0.95em;
       font-weight: 600;
       opacity: 0.95;
+      margin-bottom: 6px;
+    }
+
+    /* Style pour l'heure en tout petit */
+    .msg-time {
+      font-size: 0.78em;
+      font-weight: 400;
+      opacity: 0.85;
+      letter-spacing: 0.3px;
     }
 
     .btn-action {
@@ -172,7 +178,7 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/exec";
     const ACTION = "entree";
 
-    function afficherResultat(titre, nom, idMembre, type, photoUrl) {
+    function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
       const msgBox = document.getElementById("statusMsg");
       const photoContainer = document.getElementById("photoContainer");
       const userPhoto = document.getElementById("userPhoto");
@@ -190,14 +196,16 @@
         msgBox.classList.add("status-loading");
       }
 
-      // Construction du design interne (Titre / Nom / ID)
       if (type === "loading") {
         msgBox.innerText = titre;
       } else {
+        // Ajout de l'heure en tout petit sous l'ID
+        let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
         msgBox.innerHTML = `
           <div class="msg-title">${titre}</div>
           <div class="msg-name">${nom}</div>
           <div class="msg-id">ID : ${idMembre}</div>
+          ${heureHtml}
         `;
       }
 
@@ -214,7 +222,7 @@
       const memberId = urlParams.get('id') || urlParams.get('code');
 
       if (!memberId) {
-        afficherResultat("ERREUR", "Aucun identifiant", "Inconnu", "error", "");
+        afficherResultat("ERREUR", "Aucun identifiant", "Inconnu", "", "error", "");
         return;
       }
 
@@ -227,17 +235,22 @@
         })
         .then(data => {
           const nomMembre = data.name || memberId;
+          
+          // Récupération de l'heure actuelle locale si c'est un succès, ou extraction du message si déjà scanné
+          const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
           if (data.status === "ok") {
-            afficherResultat("✓ ENTRÉE VALIDÉE", nomMembre, memberId, "success", data.photo);
+            afficherResultat("✓ ENTRÉE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
           } else if (data.status === "already_scanned") {
-            afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, memberId, "warning", data.photo);
+            // Extrait l'heure du message renvoyé par le script si elle y est
+            afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, memberId, nowTime, "warning", data.photo);
           } else {
-            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "error", data.photo);
+            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo);
           }
         })
         .catch(err => {
           console.error(err);
-          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", memberId, "error", "");
+          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", memberId, "", "error", "");
         });
     });
   </script>
