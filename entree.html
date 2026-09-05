@@ -56,7 +56,6 @@
       font-weight: 700;
     }
 
-    /* Style de la photo ronde du membre avec bordure verte */
     .user-photo-container {
       margin: 20px auto;
       width: 110px;
@@ -66,7 +65,7 @@
       background: #ffffff;
       box-shadow: 0 4px 10px rgba(0,0,0,0.06);
       border: 3px solid #00b894;
-      display: none; /* Masqué par défaut tant qu'on charge */
+      display: none;
     }
 
     .user-photo-container img {
@@ -76,7 +75,6 @@
       object-fit: cover;
     }
 
-    /* Boîtes de statut colorées (style des cartes de l'image) */
     .status-box {
       margin: 20px 0;
       padding: 18px 15px;
@@ -102,7 +100,7 @@
     }
 
     .status-warning {
-      background-color: #ff7f27; /* Orange vif similaire à votre capture */
+      background-color: #ff7f27;
       color: #ffffff;
       border: none;
     }
@@ -113,9 +111,8 @@
       border: 1px solid #f5c6cb;
     }
 
-    /* Bouton bleu "Scanner un autre" */
     .btn-action {
-      display: none; /* Affiché une fois le résultat reçu */
+      display: block;
       width: 100%;
       margin-top: 20px;
       padding: 14px;
@@ -145,20 +142,17 @@
 
     <h2>Contrôle des Entrées</h2>
 
-    <!-- Photo du membre (affichée au retour du serveur) -->
     <div class="user-photo-container" id="photoContainer">
       <img id="userPhoto" src="" alt="Photo membre">
     </div>
 
-    <!-- Message de statut (Chargement, OK, Déjà scanné, Erreur) -->
     <div id="statusMsg" class="status-box status-loading">⏳ Analyse de l'identifiant en cours...</div>
 
-    <!-- Bouton pour recommencer / fermer -->
-    <button id="btnAnother" class="btn-action" onclick="window.location.href='about:blank'">Fermer / Terminer</button>
+    <button id="btnAnother" class="btn-action" onclick="window.close()">Fermer / Terminer</button>
   </div>
 
   <script>
-    // ⚠️ Remplacez par votre URL de déploiement Google Apps Script (/exec)
+    // Votre nouvelle URL de script Google Apps Script intégrée
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/exec";
     const ACTION = "entree";
 
@@ -166,9 +160,7 @@
       const msgBox = document.getElementById("statusMsg");
       const photoContainer = document.getElementById("photoContainer");
       const userPhoto = document.getElementById("userPhoto");
-      const btnAnother = document.getElementById("btnAnother");
 
-      // Afficher la boîte de message
       msgBox.style.display = "block";
       msgBox.className = "status-box";
 
@@ -184,29 +176,24 @@
 
       msgBox.innerText = message;
 
-      // Afficher la photo si elle existe
-      if (photoUrl && photoUrl.trim() !== "") {
+      if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
         userPhoto.src = photoUrl;
         photoContainer.style.display = "block";
       } else {
         photoContainer.style.display = "none";
       }
-
-      // Afficher le bouton d'action en bas
-      btnAnother.style.display = "block";
     }
 
-    // Au chargement de la page : récupération automatique de l'ID dans l'URL
     window.addEventListener("load", () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const idFromUrl = urlParams.get('id');
+      const memberId = urlParams.get('id') || urlParams.get('code');
 
-      if (!idFromUrl) {
-        afficherResultat("❌ Aucun identifiant (ID) trouvé dans ce lien.", "error", "");
+      if (!memberId) {
+        afficherResultat("❌ Aucun identifiant trouvé dans le lien (ex: ?id=XXXX).", "error", "");
         return;
       }
 
-      const url = `${SCRIPT_URL}?action=${ACTION}&id=${encodeURIComponent(idFromUrl)}`;
+      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
 
       fetch(url)
         .then(res => {
@@ -215,9 +202,8 @@
         })
         .then(data => {
           if (data.status === "ok") {
-            afficherResultat(`✅ Entrée validée avec succès !\n\n${data.name || idFromUrl}`, "success", data.photo);
+            afficherResultat(`✅ Entrée validée avec succès !\n\n${data.name || memberId}`, "success", data.photo);
           } else if (data.status === "already_scanned") {
-            // Reprend exactement le style orange de votre image
             afficherResultat(`⚠️ ${data.name || 'Ce membre'} est déjà enregistré comme présent !`, "warning", data.photo);
           } else {
             afficherResultat(`❌ ${data.message}`, "error", data.photo);
