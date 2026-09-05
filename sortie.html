@@ -1,47 +1,197 @@
-// Exemple de traitement de la réponse du serveur dans votre sortie.html
-fetch(urlGoogleScript + "?id=" + codeScanne + "&action=sortie")
-  .then(response => response.json())
-  .then(data => {
-    if (data.status === "ok") {
-      // Cas de succès : Sortie validée
-      afficherSuccesSortie(data.nom, data.photo);
-    } else {
-      // Cas d'erreur ou blocage (ex: Enquête non remplie ou non présent)
-      afficherAlerteEnquete(data.message, data.nom);
-    }
-  })
-  .catch(error => {
-    afficherErreurConnexion();
-  });
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle des Sorties - ASTER</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-function afficherAlerteEnquete(messageServeur, nomMembre) {
-  // Cible la zone de contenu de votre carte
-  const container = document.getElementById("result-container"); // Remplacez par l'ID de votre conteneur HTML
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            box-sizing: border-box;
+        }
 
-  container.innerHTML = `
-    <div style="text-align: center;">
-      <img src="logo-aster.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
-      <h2 style="color: #1a202c; font-family: sans-serif; margin-bottom: 20px;">Contrôle des Sorties</h2>
-      
-      <!-- Bloc Orange d'avertissement -->
-      <div style="background-color: #f97316; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <p style="font-size: 16px; font-weight: 500; margin: 0 0 10px 0;">
-          ⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.
-        </p>
-        <h3 style="font-size: 20px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-          ${nomMembre}
-        </h3>
-      </div>
+        .logo {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 15px;
+            object-fit: contain;
+        }
 
-      <!-- Boutons d'action -->
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <a href="LIEN_VERS_VOTRE_FORMULAIRE_ENQUETE" target="_blank" style="flex: 1; background-color: #0066ff; color: white; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          Remplir l'enquête
-        </a>
-        <button onclick="location.reload();" style="flex: 1; background-color: #0066ff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          Scanner un autre
-        </button>
-      </div>
+        h2 {
+            color: #1e293b;
+            font-size: 22px;
+            margin-bottom: 25px;
+        }
+
+        /* Style du bloc d'alerte orange (Enquête manquante) */
+        .alert-box {
+            background-color: #f97316;
+            color: white;
+            padding: 22px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
+        }
+
+        .alert-box p {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .alert-box h3 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Style des boutons */
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            flex: 1;
+            background-color: #0066ff;
+            color: white;
+            text-decoration: none;
+            border: none;
+            padding: 14px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 15px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 102, 255, 0.2);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn:hover {
+            background-color: #0052cc;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Style pour les états de chargement ou succès */
+        .loading-text {
+            color: #64748b;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="result-container">
+        <!-- Logo ASTER -->
+        <img src="logo-aster.png" alt="Logo ASTER" class="logo">
+        <h2>Contrôle des Sorties</h2>
+        
+        <div class="loading-text" id="status-message">Vérification en cours...</div>
     </div>
-  `;
-}
+
+    <script>
+        // ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL DE DÉPLOIEMENT GOOGLE APPS SCRIPT WEB APP
+        const URL_GOOGLE_SCRIPT = "VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI";
+
+        // Récupérer l'ID ou le Code passé dans l'URL (ex: ?id=XYZ ou ?code=XYZ)
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeScanne = urlParams.get("id") || urlParams.get("code");
+
+        const container = document.getElementById("result-container");
+
+        if (!codeScanne) {
+            container.innerHTML = `
+                <img src="logo-aster.png" alt="Logo" class="logo">
+                <h2>Contrôle des Sorties</h2>
+                <div class="alert-box" style="background-color: #ef4444;">
+                    <p>Erreur : Aucun identifiant (ID) fourni dans l'URL.</p>
+                </div>
+                <button class="btn" onclick="window.location.href='index.html'">Retour</button>
+            `;
+        } else {
+            // Appel vers Google Apps Script avec action=sortie
+            fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "ok") {
+                        // Cas où la sortie est validée avec succès
+                        container.innerHTML = `
+                            <img src="logo-aster.png" alt="Logo" class="logo">
+                            <h2>Contrôle des Sorties</h2>
+                            <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                                <p style="font-size: 18px; font-weight: bold; margin: 0;">Sortie validée avec succès !</p>
+                                <h3 style="margin: 10px 0 0 0; font-size: 20px; text-transform: uppercase;">${data.nom}</h3>
+                            </div>
+                            <button class="btn" onclick="location.reload();">Scanner un autre</button>
+                        `;
+                    } else {
+                        // Cas d'erreur / Enquête non remplie (Affiche exactement votre maquette)
+                        // Note: si data.message contient le texte de l'enquête, on l'affiche proprement
+                        let messageAlerte = data.message || "Veuillez remplir l'enquête de satisfaction avant de sortir.";
+                        // Si le message contient des sauts de ligne, on gère proprement
+                        let messageClean = messageAlerte.replace("⚠️ ", "");
+
+                        container.innerHTML = `
+                            <img src="logo-aster.png" alt="Logo" class="logo">
+                            <h2>Contrôle des Sorties</h2>
+                            
+                            <!-- Bloc Orange d'avertissement -->
+                            <div class="alert-box">
+                                <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                                <h3>${data.nom}</h3>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="btn-container">
+                                <!-- ⚠️ REMPLACEZ LE LIEN CI-DESSOUS PAR LE LIEN DE VOTRE FORMULAIRE D'ENQUÊTE -->
+                                <a href="https://forms.gle/VOTRE_LIEN_DE_FORMULAIRE" target="_blank" class="btn">
+                                    Remplir l'enquête
+                                </a>
+                                <button class="btn" onclick="location.reload();">
+                                    Scanner un autre
+                                </button>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    container.innerHTML = `
+                        <img src="logo-aster.png" alt="Logo" class="logo">
+                        <h2>Contrôle des Sorties</h2>
+                        <div class="alert-box" style="background-color: #ef4444;">
+                            <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
+                            <p style="font-size: 12px; margin-top: 5px;">ID : ${codeScanne}</p>
+                        </div>
+                        <button class="btn" onclick="location.reload();">Réessayer</button>
+                    `;
+                });
+        }
+    </script>
+</body>
+</html>
