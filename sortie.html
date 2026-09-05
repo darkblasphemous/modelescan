@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#f4f6f9">
 
-  <title>Contrôle des Sorties - ASTER</title>
+  <title>Contrôle des Sorties & Enquête - ASTER</title>
 
   <style>
     * {
@@ -96,7 +96,6 @@
       font-weight: normal;
     }
 
-    /* Le style turquoise / vert spécifique aux sorties réussi */
     .status-success {
       background-color: #0097b2;
     }
@@ -107,6 +106,67 @@
 
     .status-error {
       background-color: #e53e3e;
+    }
+
+    /* Style du formulaire d'enquête intégré */
+    .survey-box {
+      background-color: #fffaf0;
+      border: 2px solid #ed8936;
+      color: #2d3748;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      display: none;
+      text-align: left;
+    }
+
+    .survey-box h3 {
+      margin-top: 0;
+      color: #dd6b20;
+      font-size: 1.1em;
+      text-align: center;
+    }
+
+    .survey-box p {
+      font-size: 0.95em;
+      margin-bottom: 10px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .rating-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+
+    .rating-btn {
+      flex: 1;
+      padding: 10px 0;
+      background: #fff;
+      border: 2px solid #ed8936;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #ed8936;
+      transition: all 0.2s;
+    }
+
+    .rating-btn.selected, .rating-btn:hover {
+      background: #ed8936;
+      color: #fff;
+    }
+
+    .survey-box textarea {
+      width: 100%;
+      height: 70px;
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      resize: none;
+      margin-bottom: 15px;
+      font-family: inherit;
     }
 
     .msg-title {
@@ -171,21 +231,50 @@
       <img id="userPhoto" src="" alt="Photo membre">
     </div>
 
+    <!-- Boîte de statut standard (Succès / Erreur) -->
     <div id="statusMsg" class="status-box status-loading">⏳ Analyse de l'identifiant en cours...</div>
+
+    <!-- Formulaire d'enquête si requis -->
+    <div id="surveyContainer" class="survey-box">
+      <h3 id="surveyMemberName"></h3>
+      <p>Votre avis nous intéresse (Note de 1 à 5) :</p>
+      <div class="rating-buttons" id="ratingGroup">
+        <button type="button" class="rating-btn" onclick="selectRating(1)">1</button>
+        <button type="button" class="rating-btn" onclick="selectRating(2)">2</button>
+        <button type="button" class="rating-btn" onclick="selectRating(3)">3</button>
+        <button type="button" class="rating-btn" onclick="selectRating(4)">4</button>
+        <button type="button" class="rating-btn" onclick="selectRating(5)">5</button>
+      </div>
+      <textarea id="surveyComment" placeholder="Commentaire optionnel..."></textarea>
+      <button class="btn-action" style="margin-top:0;" onclick="submitSurveyData()">Valider l'enquête & la Sortie</button>
+    </div>
 
     <button id="btnAnother" class="btn-action" onclick="window.close()">Fermer / Terminer</button>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/exec";
-    // Paramètre action modifié pour correspondre aux sorties
-    const ACTION = "sortie";
+    let globalMemberId = "";
+    let selectedNote = 5; // Note par défaut
+
+    function selectRating(note) {
+      selectedNote = note;
+      document.querySelectorAll('.rating-btn').forEach((btn, index) => {
+        if (index + 1 === note) {
+          btn.classList.add('selected');
+        } else {
+          btn.classList.remove('selected');
+        }
+      });
+    }
 
     function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
       const msgBox = document.getElementById("statusMsg");
       const photoContainer = document.getElementById("photoContainer");
       const userPhoto = document.getElementById("userPhoto");
+      const surveyContainer = document.getElementById("surveyContainer");
 
+      surveyContainer.style.display = "none"; // Masquer l'enquête par défaut
       msgBox.style.display = "block";
       msgBox.className = "status-box";
 
@@ -219,16 +308,58 @@
       }
     }
 
+    function afficherEnquete(nom, idMembre, photoUrl) {
+      const msgBox = document.getElementById("statusMsg");
+      const surveyContainer = document.getElementById("surveyContainer");
+      const photoContainer = document.getElementById("photoContainer");
+      const userPhoto = document.getElementById("userPhoto");
+      const surveyMemberName = document.getElementById("surveyMemberName");
+
+      msgBox.style.display = "none"; // Masquer le message classique
+      surveyContainer.style.display = "block"; // Afficher le formulaire d'enquête
+      surveyMemberName.innerText = `Enquête requise pour : ${nom}`;
+
+      if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
+        userPhoto.src = photoUrl;
+        photoContainer.style.display = "block";
+      } else {
+        photoContainer.style.display = "none";
+      }
+      selectRating(5); // Sélectionner 5 par défaut
+    }
+
+    function submitSurveyData() {
+      const comment = document.getElementById("surveyComment").value;
+      const url = `${SCRIPT_URL}?action=submitSurvey&code=${encodeURIComponent(globalMemberId)}&note=${selectedNote}&commentaire=${encodeURIComponent(comment)}`;
+
+      document.getElementById("surveyContainer").style.display = "none";
+      afficherResultat("⏳ Enregistrement...", "", "", "", "loading", "");
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          if (data.status === "ok") {
+            afficherResultat("✓ SORTIE VALIDÉE", globalMemberId, globalMemberId, nowTime, "success", "");
+          } else {
+            afficherResultat("❌ ERREUR", data.message || "Erreur", globalMemberId, "", "error", "");
+          }
+        })
+        .catch(err => {
+          afficherResultat("❌ ERREUR", "Problème réseau", globalMemberId, "", "error", "");
+        });
+    }
+
     window.addEventListener("load", () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('id') || urlParams.get('code');
+      globalMemberId = urlParams.get('id') || urlParams.get('code');
 
-      if (!memberId) {
+      if (!globalMemberId) {
         afficherResultat("ERREUR", "Aucun identifiant", "Inconnu", "", "error", "");
         return;
       }
 
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
+      const url = `${SCRIPT_URL}?action=sortie&code=${encodeURIComponent(globalMemberId)}`;
 
       fetch(url)
         .then(res => {
@@ -236,20 +367,23 @@
           return res.json();
         })
         .then(data => {
-          const nomMembre = data.name || memberId;
+          const nomMembre = data.name || globalMemberId;
           const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
           if (data.status === "ok") {
-            afficherResultat("✓ SORTIE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
+            afficherResultat("✓ SORTIE VALIDÉE", nomMembre, globalMemberId, nowTime, "success", data.photo);
+          } else if (data.status === "require_survey") {
+            // Le script demande l'enquête : on affiche le formulaire interactif
+            afficherEnquete(nomMembre, globalMemberId, data.photo);
           } else if (data.status === "already_scanned") {
-            afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, memberId, nowTime, "warning", data.photo);
+            afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, globalMemberId, nowTime, "warning", data.photo);
           } else {
-            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo);
+            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", globalMemberId, "", "error", data.photo);
           }
         })
         .catch(err => {
           console.error(err);
-          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", memberId, "", "error", "");
+          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", globalMemberId, "", "error", "");
         });
     });
   </script>
