@@ -114,4 +114,198 @@
       font-weight: bold;
       padding: 4px 8px;
       border-radius: 4px;
-      font-size:
+      font-size: 0.8em;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .badge.present {
+      color: #00b894;
+      background-color: #e6f9f5;
+    }
+
+    .badge.sorti {
+      color: #d63031;
+      background-color: #ffecec;
+    }
+
+    .badge.attente {
+      color: #b2bec3;
+      background-color: #f1f2f6;
+    }
+
+    .badge-count {
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8em;
+    }
+
+    .badge-count.in {
+      background-color: #00b894;
+    }
+
+    .badge-count.out {
+      background-color: #d63031;
+    }
+
+    .badge-count.total {
+      background-color: #0984e3;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9em;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #00b894;
+    }
+
+    .members-scroll-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .empty-msg {
+      color: #aaa;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo ASTER" id="app-logo">
+  </div>
+
+  <h2>Tableau de Bord - Administration</h2>
+
+  <div class="stats-container">
+    <div class="stat-badge-wrapper">
+      <span>In:</span> <span class="badge-count in" id="inCount">0</span>
+    </div>
+    <div class="stat-badge-wrapper">
+      <span>Out:</span> <span class="badge-count out" id="outCount">0</span>
+    </div>
+    <div class="stat-badge-wrapper">
+      <span>Inscrits:</span> <span class="badge-count total" id="totalCount">0</span>
+    </div>
+  </div>
+  
+  <div class="members-container-card">
+    <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un membre par nom ou ID..." oninput="filtrerMembres()">
+    <div class="members-scroll-list" id="membersList">
+      <p class="empty-msg">Chargement des membres...</p>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
+    let tousLesMembres = [];
+
+    function chargerMembresJSONP() {
+      const callbackName = "handleMembersResponse_" + Math.floor(Math.random() * 100000);
+      
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        const script = document.getElementById(callbackName);
+        if (script) script.remove();
+
+        if (data && data.success && data.members) {
+          tousLesMembres = data.members;
+          
+          document.getElementById("totalCount").innerText = data.total || tousLesMembres.length;
+
+          const nbIn = tousLesMembres.filter(m => m.statut === "Présent").length;
+          const nbOut = tousLesMembres.filter(m => m.statut === "Sorti").length;
+
+          document.getElementById("inCount").innerText = nbIn;
+          document.getElementById("outCount").innerText = nbOut;
+
+          afficherMembres(tousLesMembres);
+        } else {
+          document.getElementById("membersList").innerHTML = `<p class="empty-msg" style="color:red;">Erreur: ${data.error || 'Aucun membre trouvé'}</p>`;
+        }
+      };
+
+      const scriptTag = document.createElement("script");
+      scriptTag.id = callbackName;
+      scriptTag.src = `${SCRIPT_URL}?action=getMembers&_=${new Date().getTime()}&callback=${callbackName}`;
+      
+      scriptTag.onerror = function() {
+        delete window[callbackName];
+        scriptTag.remove();
+        document.getElementById("membersList").innerHTML = '<p class="empty-msg" style="color:red;">Échec du chargement des inscrits.</p>';
+      };
+
+      document.body.appendChild(scriptTag);
+    }
+
+    function formaterHeure(dateVal) {
+      if (!dateVal) return '';
+      return String(dateVal).trim();
+    }
+
+    function afficherMembres(liste) {
+      const container = document.getElementById("membersList");
+      if (liste.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Aucun résultat trouvé.</p>';
+        return;
+      }
+
+      container.innerHTML = liste.map(m => {
+        const photo = (m.photoUrl && m.photoUrl.length > 5) ? m.photoUrl : 'https://via.placeholder.com/44?text=?';
+        
+        let badgeClass = "attente";
+        let badgeText = m.statut || 'Inscrit';
+        if (m.statut === "Présent") badgeClass = "present";
+        if (m.statut === "Sorti") badgeClass = "sorti";
+
+        const heurePropre = formaterHeure(m.heure);
+
+        return `
+          <div class="member-item">
+            <div class="user-info">
+              <img class="mini-thumb" src="${photo}" alt="Avatar">
+              <div>
+                <strong style="color:#333; font-size:0.9em; display:block;">${m.nom}</strong>
+                <div style="color:#777; font-size:0.75em;">${m.id}</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+              <span class="badge ${badgeClass}">${badgeText}</span>
+              <span style="font-size: 0.75em; color: #666; white-space: nowrap; font-weight: 500;">${heurePropre}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filtrerMembres() {
+      const recherche = document.getElementById("searchInput").value.toLowerCase();
+      const resultats = tousLesMembres.filter(m => 
+        m.nom.toLowerCase().includes(recherche) || m.id.toLowerCase().includes(recherche)
+      );
+      afficherMembres(resultats);
+    }
+
+    setInterval(() => {
+      chargerMembresJSONP();
+    }, 5000);
+
+    chargerMembresJSONP();
+  </script>
+</body>
+</html>
