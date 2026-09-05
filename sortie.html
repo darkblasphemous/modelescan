@@ -27,10 +27,10 @@
             box-sizing: border-box;
         }
 
-        /* Style du logo */
+        /* Logo agrandi à 120px (identique à la page d'entrée) */
         .logo {
-            width: 90px;
-            height: 90px;
+            width: 120px;
+            height: 120px;
             margin: 0 auto 15px auto;
             object-fit: contain;
             display: block;
@@ -39,10 +39,10 @@
         h2 {
             color: #1e293b;
             font-size: 22px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
-        /* Style de la barre de progression (identique à l'entrée) */
+        /* Style de la barre de progression (chargement) */
         .progress-bar-container {
             width: 100%;
             background-color: #e2e8f0;
@@ -66,7 +66,6 @@
             100% { width: 30%; }
         }
 
-        /* Boîte de chargement style "Validation en cours..." */
         .loading-box {
             background-color: #f0f7ff;
             border: 1px solid #d0e3ff;
@@ -155,7 +154,7 @@
         <img src="logo.png" alt="Logo ASTER" class="logo">
         <h2>Contrôle des Sorties</h2>
         
-        <!-- Barre de progression et animation de chargement initiale identique à l'entrée -->
+        <!-- Écran de chargement initial -->
         <div class="progress-bar-container">
             <div class="progress-bar"></div>
         </div>
@@ -183,7 +182,6 @@
                 <button class="btn" onclick="window.location.href='index.html'">Retour</button>
             `;
         } else {
-            // Petit délai artificiel optionnel pour laisser apprécier l'animation de chargement
             setTimeout(() => {
                 fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
                     .then(response => response.json())
@@ -238,7 +236,7 @@
                             <button class="btn" onclick="location.reload();">Réessayer</button>
                         `;
                     });
-            }, 600); // 600ms de transition fluide
+            }, 600);
         }
     </script>
 </body>
