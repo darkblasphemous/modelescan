@@ -97,7 +97,6 @@
             transform: scale(0.98);
         }
 
-        /* Style pour les états de chargement ou succès */
         .loading-text {
             color: #64748b;
             font-size: 16px;
@@ -116,8 +115,8 @@
     </div>
 
     <script>
-        // ⚠️ REMPLACEZ CETTE URL PAR VOTRE URL DE DÉPLOIEMENT GOOGLE APPS SCRIPT WEB APP
-        const URL_GOOGLE_SCRIPT = "VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI";
+        // Votre URL de déploiement Google Apps Script intégrée
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
 
         // Récupérer l'ID ou le Code passé dans l'URL (ex: ?id=XYZ ou ?code=XYZ)
         const urlParams = new URLSearchParams(window.location.search);
@@ -151,12 +150,7 @@
                             <button class="btn" onclick="location.reload();">Scanner un autre</button>
                         `;
                     } else {
-                        // Cas d'erreur / Enquête non remplie (Affiche exactement votre maquette)
-                        // Note: si data.message contient le texte de l'enquête, on l'affiche proprement
-                        let messageAlerte = data.message || "Veuillez remplir l'enquête de satisfaction avant de sortir.";
-                        // Si le message contient des sauts de ligne, on gère proprement
-                        let messageClean = messageAlerte.replace("⚠️ ", "");
-
+                        // Cas d'erreur / Enquête non remplie (Affiche exactement votre design orange)
                         container.innerHTML = `
                             <img src="logo-aster.png" alt="Logo" class="logo">
                             <h2>Contrôle des Sorties</h2>
