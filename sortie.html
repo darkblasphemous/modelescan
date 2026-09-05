@@ -27,11 +27,13 @@
             box-sizing: border-box;
         }
 
+        /* Style identique au logo rond de la page d'entrée */
         .logo {
             width: 90px;
             height: 90px;
-            margin-bottom: 15px;
+            margin: 0 auto 15px auto;
             object-fit: contain;
+            display: block;
         }
 
         h2 {
@@ -40,7 +42,7 @@
             margin-bottom: 20px;
         }
 
-        /* Style de la photo du membre avec le contour rond */
+        /* Style de la photo du membre */
         .member-photo {
             width: 100px;
             height: 100px;
@@ -52,7 +54,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Style du bloc d'alerte orange (Enquête manquante) */
+        /* Style du bloc d'alerte orange */
         .alert-box {
             background-color: #f97316;
             color: white;
@@ -119,7 +121,7 @@
 <body>
 
     <div class="card" id="result-container">
-        <!-- Logo ASTER -->
+        <!-- Logo ASTER (Vérifiez si votre fichier s'appelle logo-aster.png ou logo.png) -->
         <img src="logo-aster.png" alt="Logo ASTER" class="logo">
         <h2>Contrôle des Sorties</h2>
         
@@ -148,14 +150,12 @@
             fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
                 .then(response => response.json())
                 .then(data => {
-                    // Gestion de l'affichage de la photo (si elle existe dans le Google Sheet)
                     let photoHtml = "";
                     if (data.photo && data.photo.trim() !== "") {
                         photoHtml = `<img src="${data.photo}" alt="Photo de ${data.nom}" class="member-photo">`;
                     }
 
                     if (data.status === "ok") {
-                        // Cas où la sortie est validée avec succès
                         container.innerHTML = `
                             <img src="logo-aster.png" alt="Logo ASTER" class="logo">
                             <h2>Contrôle des Sorties</h2>
@@ -167,20 +167,17 @@
                             <button class="btn" onclick="location.reload();">Scanner un autre</button>
                         `;
                     } else {
-                        // Cas d'erreur / Enquête non remplie avec Logo + Photo + Bloc Orange + Boutons
                         container.innerHTML = `
                             <img src="logo-aster.png" alt="Logo ASTER" class="logo">
                             <h2>Contrôle des Sorties</h2>
                             
                             ${photoHtml}
                             
-                            <!-- Bloc Orange d'avertissement -->
                             <div class="alert-box">
                                 <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
                                 <h3>${data.nom}</h3>
                             </div>
 
-                            <!-- Boutons d'action -->
                             <div class="btn-container">
                                 <a href="${URL_FORMULAIRE}" target="_blank" class="btn">
                                     Remplir l'enquête
