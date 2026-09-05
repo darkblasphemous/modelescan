@@ -1,214 +1,117 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrôle d'Entrée - ASTER</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-        .card {
-            background: white;
-            padding: 30px 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-        }
-        .logo {
-            max-width: 130px;
-            height: auto;
-            margin-bottom: 15px;
-        }
-        h3 {
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 22px;
-            font-weight: 700;
-        }
-        #reader {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto 15px auto;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        .status-box {
-            padding: 25px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            color: white;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 1.5;
-            display: none;
-        }
-        .success-bg {
-            background-color: #10b981; /* Vert vif */
-        }
-        .error-bg {
-            background-color: #ef4444; /* Rouge pour les erreurs techniques */
-        }
-        .warning-bg {
-            background-color: #f97316; /* Orange vif et bien voyant */
-            color: white;
-        }
-        .loading-bg {
-            background-color: #6b7280; /* Gris chargement */
-        }
-        /* Style pour la photo du membre */
-        #member-photo {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-            border: 3px solid #10b981;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            color: white;
-            margin-top: 5px;
-        }
-        .btn-blue {
-            background-color: #007bff;
-        }
-        .btn-blue:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f4f6f9">
 
-    <div class="card">
-        <img src="logo.png" alt="Logo ASTER" class="logo">
-        <h3>Contrôle des Entrées</h3>
+  <title>Administration - ASTER</title>
+  
+  <style>
+    * {
+      box-sizing: border-box !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      width: 100%;
+      margin: 0;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f6f9;
+      text-align: center;
+      -webkit-text-size-adjust: 100%;
+    }
 
-        <!-- Étape 1 : Le Scanner Caméra -->
-        <div id="scanner-container">
-            <div id="reader"></div>
-            <p style="font-size: 14px; color: #666;">Scannez le badge du membre pour valider l'entrée</p>
-        </div>
+    .logo-container {
+      margin: 10px auto 15px auto;
+      max-width: 180px;
+      width: 100%;
+    }
+    
+    .logo-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
 
-        <!-- Étape 2 : Le Grand Bloc de Résultat (Masqué par défaut) -->
-        <div id="result-container" style="display: none;">
-            <img id="member-photo" src="" alt="Photo du membre">
-            <div id="message-box" class="status-box"></div>
-            <div id="action-area"></div>
-        </div>
-    </div>
+    h2 {
+      color: #333;
+      margin: 10px 0 15px 0;
+      font-size: 1.4em;
+    }
 
-    <script>
-        let html5QrCode;
-        const scriptUrl = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      max-width: 480px;
+      margin: 0 auto 12px auto;
+      font-size: 0.9em;
+      font-weight: bold;
+      color: #444;
+    }
 
-        function verifierID(memberId) {
-            document.getElementById('scanner-container').style.display = 'none';
-            const resultContainer = document.getElementById('result-container');
-            resultContainer.style.display = 'block';
-            
-            // Masquer la photo pendant le chargement
-            document.getElementById('member-photo').style.display = 'none';
+    .stat-badge-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
 
-            const msgBox = document.getElementById('message-box');
-            msgBox.className = "status-box loading-bg";
-            msgBox.style.display = "block";
-            msgBox.innerHTML = "Vérification de l'entrée en cours...";
+    .members-container-card {
+      text-align: left;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto 20px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
 
-            fetch(`${scriptUrl}?code=${encodeURIComponent(memberId)}&action=entree`)
-                .then(response => response.json())
-                .then(data => {
-                    const actionArea = document.getElementById('action-area');
-                    actionArea.innerHTML = '';
+    .member-item {
+      border-bottom: 1px solid #eee;
+      padding: 12px 0;
+      font-size: 0.85em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-                    // Gestion de l'affichage de la photo si elle est présente dans le JSON
-                    const imgElem = document.getElementById('member-photo');
-                    if (data.photo && data.photo.trim() !== "") {
-                        imgElem.src = data.photo;
-                        imgElem.style.display = 'inline-block';
-                    } else {
-                        imgElem.style.display = 'none';
-                    }
+    .member-item:last-child {
+      border-bottom: none;
+    }
 
-                    // CORRECTION ICI : Gestion propre des différents statuts retournés par le script
-                    if (data.status === "ok") {
-                        msgBox.className = "status-box success-bg";
-                        msgBox.innerHTML = `✓ ENTRÉE VALIDÉE<br><span style="font-size: 18px; font-weight: bold;">${data.name}</span><br><small>ID : ${memberId}</small>`;
-                    } else if (data.status === "deja_present(e)") {
-                        msgBox.className = "status-box warning-bg";
-                        msgBox.innerHTML = `⚠️ ${data.message}`;
-                    } else {
-                        msgBox.className = "status-box warning-bg";
-                        msgBox.innerHTML = `⚠️ ${data.message || data.error || "Erreur lors du contrôle."}`;
-                    }
+    /* Modifié pour aligner verticalement la photo et le texte */
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+    }
 
-                    const btn = document.createElement('button');
-                    btn.className = "btn btn-blue";
-                    btn.innerText = "Scanner un autre";
-                    btn.onclick = () => location.href = "entree.html";
-                    actionArea.appendChild(btn);
-                })
-                .catch(error => {
-                    msgBox.className = "status-box error-bg";
-                    msgBox.innerHTML = "❌ Erreur de connexion au serveur.";
-                    const btn = document.createElement('button');
-                    btn.className = "btn btn-blue";
-                    btn.innerText = "Réessayer";
-                    btn.onclick = () => location.href = "entree.html";
-                    document.getElementById('action-area').appendChild(btn);
-                    console.error('Erreur:', error);
-                });
-        }
+    .mini-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #ddd;
+      background-color: #eee;
+      flex-shrink: 0;
+    }
 
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const memberId = urlParams.get('id') || urlParams.get('code');
-
-            if (memberId) {
-                verifierID(memberId.trim());
-            } else {
-                html5QrCode = new Html5Qrcode("reader");
-                html5QrCode.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: 250 },
-                    (decodedText) => {
-                        html5QrCode.stop().then(() => {
-                            let cleanId = decodedText;
-                            try {
-                                if (decodedText.includes('?')) {
-                                    const urlObj = new URL(decodedText);
-                                    cleanId = urlObj.searchParams.get('id') || urlObj.searchParams.get('code') || decodedText;
-                                }
-                            } catch (e) {}
-                            verifierID(cleanId.trim());
-                        });
-                    }
-                ).catch(err => {
-                    console.error("Erreur caméra : " + err);
-                });
-            }
-        };
-    </script>
-</body>
-</html>
+    .badge {
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size:
