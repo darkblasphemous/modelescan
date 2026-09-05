@@ -188,6 +188,9 @@
       const userPhoto = document.getElementById("userPhoto");
       const btnContainer = document.getElementById("actionButtons");
 
+      // Sécurité anti-bug si l'élément n'est pas encore chargé
+      if (!msgBox) return;
+
       msgBox.style.display = "block";
       msgBox.className = "status-box";
 
@@ -212,26 +215,29 @@
         `;
       }
 
-      if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
-        userPhoto.src = photoUrl;
-        photoContainer.style.display = "block";
-      } else {
-        photoContainer.style.display = "none";
+      if (photoContainer && userPhoto) {
+        if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
+          userPhoto.src = photoUrl;
+          photoContainer.style.display = "block";
+        } else {
+          photoContainer.style.display = "none";
+        }
       }
 
-      // Configuration des boutons avec l'ID du membre pré-rempli via entry.648947853
-      if (statusType === "require_survey") {
-        let formUrlWithId = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.648947853=${encodeURIComponent(idMembre)}`;
-        btnContainer.innerHTML = `
-          <div class="btn-grid">
-            <a href="${formUrlWithId}" class="btn-action" style="text-align: center;">Remplir l'enquête</a>
-            <button class="btn-action" onclick="location.reload()">Scanner un autre</button>
-          </div>
-        `;
-      } else {
-        btnContainer.innerHTML = `
-          <button class="btn-action" onclick="window.close()" style="margin-top: 15px;">Fermer / Terminer</button>
-        `;
+      if (btnContainer) {
+        if (statusType === "require_survey") {
+          let formUrlWithId = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.648947853=${encodeURIComponent(idMembre)}`;
+          btnContainer.innerHTML = `
+            <div class="btn-grid">
+              <a href="${formUrlWithId}" class="btn-action" style="text-align: center;">Remplir l'enquête</a>
+              <button class="btn-action" onclick="location.reload()">Scanner un autre</button>
+            </div>
+          `;
+        } else {
+          btnContainer.innerHTML = `
+            <button class="btn-action" onclick="window.close()" style="margin-top: 15px;">Fermer / Terminer</button>
+          `;
+        }
       }
     }
 
@@ -243,6 +249,9 @@
         afficherResultat("❌ ERREUR", "Aucun identifiant", "Inconnu", "", "error", "", "");
         return;
       }
+
+      // Message de patience immédiat
+      afficherResultat("⏳ Vérification en cours, veuillez patienter...", "", memberId, "", "loading", "", "");
 
       const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
 
@@ -258,7 +267,7 @@
           if (data.status === "ok") {
             afficherResultat("✓ SORTIE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo, "ok");
           } else if (data.status === "require_survey") {
-            afficherResultat("⚠ Veuillez remplir l'enquête de satisfaction avant de sortir.", nomMembre, memberId, "", "warning", data.photo, "require_survey");
+            afficherResultat("⚠ Veuillez remplir l'enquête de satisfaction avant de sortir.", nomMembrè = nomMembre, memberId, "", "warning", data.photo, "require_survey");
           } else if (data.status === "no_entry") {
             afficherResultat("⚠ Impossible de pointer la sortie : aucune entrée enregistrée.", nomMembre, memberId, "", "warning", data.photo, "no_entry");
           } else if (data.status === "already_scanned") {
