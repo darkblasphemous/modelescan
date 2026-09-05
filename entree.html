@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entrée - Saisie Identifiant</title>
+  <title>Validation Entrée - Saisie Identifiant</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -99,8 +99,9 @@
 </head>
 <body>
 
-  <h2>Validation Entrée (ID)</h2>
+  <h2>Validation Entrée</h2>
 
+  <!-- Zone de Saisie Manuelle ou Douchette (Design d'origine) -->
   <div class="card">
     <form onsubmit="validerSaisie(event)">
       <div class="input-group">
@@ -110,6 +111,107 @@
     </form>
   </div>
 
+  <!-- Affichage de la Fiche Membre -->
   <div class="card" id="resultCard">
     <div class="user-info">
-      <img
+      <img id="userPhoto" src="https://via.placeholder.com/70" alt="Photo">
+      <div id="userName" class="name">--</div>
+    </div>
+    <div id="statusBox" class="status-box">--</div>
+  </div>
+
+  <script>
+    // ⚠️ Remplacez cette URL par votre NOUVELLE URL de déploiement Google Apps Script (/exec)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/execc";
+
+    let isProcessing = false;
+
+    // --- Lecture automatique si l'URL contient ?id=XXXXX ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const idFromUrl = urlParams.get('id');
+      
+      if (idFromUrl) {
+        document.getElementById("manualCode").value = idFromUrl;
+        envoyerCodeBackend(idFromUrl);
+      }
+    });
+
+    function validerSaisie(e) {
+      if (e) e.preventDefault(); 
+      
+      const input = document.getElementById("manualCode");
+      const code = input.value.trim();
+      
+      if (code && !isProcessing) {
+        envoyerCodeBackend(code);
+      }
+    }
+
+    function envoyerCodeBackend(code) {
+      isProcessing = true;
+      const callbackName = "cb_" + Date.now();
+
+      const statusBox = document.getElementById("statusBox");
+      const resultCard = document.getElementById("resultCard");
+      resultCard.style.display = "block";
+      statusBox.className = "status-box";
+      statusBox.style.background = "#f1f2f6";
+      statusBox.style.color = "#2f3542";
+      statusBox.innerText = "Validation en cours...";
+
+      window[callbackName] = function(data) {
+        nettoyerScript(callbackName);
+        afficherResultat(data);
+        isProcessing = false;
+        document.getElementById("manualCode").value = ""; 
+        document.getElementById("manualCode").focus(); 
+      };
+
+      const script = document.createElement("script");
+      script.id = callbackName;
+      script.src = `${SCRIPT_URL}?action=entree&code=${encodeURIComponent(code)}&callback=${callbackName}`;
+      
+      script.onerror = function() {
+        nettoyerScript(callbackName);
+        afficherResultat({
+          status: "error",
+          name: "Erreur réseau",
+          message: "Impossible de joindre le serveur. Vérifiez votre connexion."
+        });
+        isProcessing = false;
+        document.getElementById("manualCode").focus();
+      };
+
+      document.body.appendChild(script);
+    }
+
+    function nettoyerScript(id) {
+      delete window[id];
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    function afficherResultat(data) {
+      const userPhoto = document.getElementById("userPhoto");
+      const userName = document.getElementById("userName");
+      const statusBox = document.getElementById("statusBox");
+
+      userName.innerText = data.name || "Membre inconnu";
+      userPhoto.src = (data.photo && data.photo.length > 10) ? data.photo : "https://via.placeholder.com/70?text=?";
+
+      statusBox.className = "status-box";
+
+      if (data.status === "ok") {
+        statusBox.classList.add("status-ok");
+      } else if (data.status === "already_scanned") {
+        statusBox.classList.add("status-already");
+      } else {
+        statusBox.classList.add("status-error");
+      }
+
+      statusBox.innerText = data.message || "";
+    }
+  </script>
+</body>
+</html>
