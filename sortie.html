@@ -117,6 +117,9 @@
     <script>
         // Votre URL de déploiement Google Apps Script intégrée
         const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
+        
+        // Votre lien de formulaire d'enquête intégré
+        const URL_FORMULAIRE = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=header";
 
         // Récupérer l'ID ou le Code passé dans l'URL (ex: ?id=XYZ ou ?code=XYZ)
         const urlParams = new URLSearchParams(window.location.search);
@@ -163,8 +166,7 @@
 
                             <!-- Boutons d'action -->
                             <div class="btn-container">
-                                <!-- ⚠️ REMPLACEZ LE LIEN CI-DESSOUS PAR LE LIEN DE VOTRE FORMULAIRE D'ENQUÊTE -->
-                                <a href="https://forms.gle/VOTRE_LIEN_DE_FORMULAIRE" target="_blank" class="btn">
+                                <a href="${URL_FORMULAIRE}" target="_blank" class="btn">
                                     Remplir l'enquête
                                 </a>
                                 <button class="btn" onclick="location.reload();">
