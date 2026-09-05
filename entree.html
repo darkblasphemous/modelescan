@@ -224,6 +224,9 @@
         return;
       }
 
+      // Affiche immédiatement un message d'attente pendant que le serveur répond
+      afficherResultat("⏳ Validation en cours, veuillez patienter...", "", memberId, "", "loading", "");
+
       const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
 
       fetch(url)
