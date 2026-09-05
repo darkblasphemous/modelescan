@@ -10,7 +10,6 @@
 
   <title>Entrée - Scanner ASTER</title>
   
-  <!-- Librairie de détection de Code QR / Code-barres -->
   <script src="https://unpkg.com/@zxing/library@latest"></script>
 
   <style>
@@ -90,7 +89,6 @@
       cursor: pointer;
     }
 
-    /* Carte de résultat du Scan */
     .result-card {
       display: none;
       max-width: 480px;
@@ -101,7 +99,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    /* Photos et infos du membre alignées verticalement */
     .user-profile {
       display: flex;
       flex-direction: column;
@@ -133,7 +130,6 @@
       margin-top: 5px;
     }
 
-    /* États des alertes */
     .alert-box.success {
       background-color: #e6f9f5;
       color: #00b894;
@@ -156,7 +152,7 @@
 <body>
 
   <div class="logo-container">
-    <img src="logo.png" alt="Logo ASTER">
+    <img src="logo.png" alt="Logo ASTER" id="app-logo">
   </div>
 
   <h2>Scanner Entrée</h2>
@@ -184,21 +180,26 @@
     let codeReader = null;
     let isProcessing = false;
 
-    // Initialisation de la caméra
     window.addEventListener('load', function () {
-      codeReader = new ZXing.BrowserMultiFormatReader();
-      codeReader.listVideoInputDevices()
-        .then((videoInputDevices) => {
-          const selectedDeviceId = videoInputDevices.length > 1 ? videoInputDevices[1].deviceId : videoInputDevices[0].deviceId;
-          codeReader.decodeFromVideoDevice(selectedDeviceId, 'video-preview', (result, err) => {
-            if (result && !isProcessing) {
-              envoyerEntreeJSONP(result.text);
+      try {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader.listVideoInputDevices()
+          .then((videoInputDevices) => {
+            if (videoInputDevices.length > 0) {
+              const selectedDeviceId = videoInputDevices.length > 1 ? videoInputDevices[1].deviceId : videoInputDevices[0].deviceId;
+              codeReader.decodeFromVideoDevice(selectedDeviceId, 'video-preview', (result, err) => {
+                if (result && !isProcessing) {
+                  envoyerEntreeJSONP(result.text);
+                }
+              });
             }
+          })
+          .catch((err) => {
+            console.warn("Caméra indisponible ou permission refusée:", err);
           });
-        })
-        .catch((err) => {
-          console.error("Erreur d'accès à la caméra:", err);
-        });
+      } catch (e) {
+        console.error("Erreur initialisation ZXing:", e);
+      }
     });
 
     function validerCodeManuel() {
@@ -210,10 +211,8 @@
       }
     }
 
-    // Requête en JSONP pour contourner les restrictions CORS / Apps Script
     function envoyerEntreeJSONP(code) {
       isProcessing = true;
-
       const callbackName = "handleEntreeResponse_" + Math.floor(Math.random() * 100000);
 
       window[callbackName] = function(data) {
@@ -223,7 +222,6 @@
 
         afficherResultat(data);
 
-        // Pause de 3.5 secondes avant la réactivation du scanner
         setTimeout(() => {
           isProcessing = false;
         }, 3500);
