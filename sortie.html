@@ -39,7 +39,43 @@
         h2 {
             color: #1e293b;
             font-size: 22px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        /* Style de la barre de progression (identique à l'entrée) */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 60%;
+            height: 100%;
+            background-color: #0066ff;
+            border-radius: 10px;
+            animation: pulse-bar 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-bar {
+            0% { width: 30%; }
+            50% { width: 80%; }
+            100% { width: 30%; }
+        }
+
+        /* Boîte de chargement style "Validation en cours..." */
+        .loading-box {
+            background-color: #f0f7ff;
+            border: 1px solid #d0e3ff;
+            color: #0066ff;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 25px;
         }
 
         /* Style de la photo du membre */
@@ -110,22 +146,22 @@
         .btn:active {
             transform: scale(0.98);
         }
-
-        .loading-text {
-            color: #64748b;
-            font-size: 16px;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
 
     <div class="card" id="result-container">
-        <!-- Utilisation de logo.png -->
+        <!-- Logo ASTER -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         <h2>Contrôle des Sorties</h2>
         
-        <div class="loading-text" id="status-message">Vérification en cours...</div>
+        <!-- Barre de progression et animation de chargement initiale identique à l'entrée -->
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="loading-box">
+            Validation en cours...
+        </div>
     </div>
 
     <script>
@@ -147,59 +183,62 @@
                 <button class="btn" onclick="window.location.href='index.html'">Retour</button>
             `;
         } else {
-            fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
-                .then(response => response.json())
-                .then(data => {
-                    let photoHtml = "";
-                    if (data.photo && data.photo.trim() !== "") {
-                        photoHtml = `<img src="${data.photo}" alt="Photo de ${data.nom}" class="member-photo">`;
-                    }
+            // Petit délai artificiel optionnel pour laisser apprécier l'animation de chargement
+            setTimeout(() => {
+                fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let photoHtml = "";
+                        if (data.photo && data.photo.trim() !== "") {
+                            photoHtml = `<img src="${data.photo}" alt="Photo de ${data.nom}" class="member-photo">`;
+                        }
 
-                    if (data.status === "ok") {
+                        if (data.status === "ok") {
+                            container.innerHTML = `
+                                <img src="logo.png" alt="Logo ASTER" class="logo">
+                                <h2>Contrôle des Sorties</h2>
+                                ${photoHtml}
+                                <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                                    <p style="font-size: 18px; font-weight: bold; margin: 0;">Sortie validée avec succès !</p>
+                                    <h3 style="margin: 10px 0 0 0; font-size: 20px; text-transform: uppercase;">${data.nom}</h3>
+                                </div>
+                                <button class="btn" onclick="location.reload();">Scanner un autre</button>
+                            `;
+                        } else {
+                            container.innerHTML = `
+                                <img src="logo.png" alt="Logo ASTER" class="logo">
+                                <h2>Contrôle des Sorties</h2>
+                                
+                                ${photoHtml}
+                                
+                                <div class="alert-box">
+                                    <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                                    <h3>${data.nom}</h3>
+                                </div>
+
+                                <div class="btn-container">
+                                    <a href="${URL_FORMULAIRE}" target="_blank" class="btn">
+                                        Remplir l'enquête
+                                    </a>
+                                    <button class="btn" onclick="location.reload();">
+                                        Scanner un autre
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
                         container.innerHTML = `
                             <img src="logo.png" alt="Logo ASTER" class="logo">
                             <h2>Contrôle des Sorties</h2>
-                            ${photoHtml}
-                            <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                                <p style="font-size: 18px; font-weight: bold; margin: 0;">Sortie validée avec succès !</p>
-                                <h3 style="margin: 10px 0 0 0; font-size: 20px; text-transform: uppercase;">${data.nom}</h3>
+                            <div class="alert-box" style="background-color: #ef4444;">
+                                <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
+                                <p style="font-size: 12px; margin-top: 5px;">ID : ${codeScanne}</p>
                             </div>
-                            <button class="btn" onclick="location.reload();">Scanner un autre</button>
+                            <button class="btn" onclick="location.reload();">Réessayer</button>
                         `;
-                    } else {
-                        container.innerHTML = `
-                            <img src="logo.png" alt="Logo ASTER" class="logo">
-                            <h2>Contrôle des Sorties</h2>
-                            
-                            ${photoHtml}
-                            
-                            <div class="alert-box">
-                                <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                                <h3>${data.nom}</h3>
-                            </div>
-
-                            <div class="btn-container">
-                                <a href="${URL_FORMULAIRE}" target="_blank" class="btn">
-                                    Remplir l'enquête
-                                </a>
-                                <button class="btn" onclick="location.reload();">
-                                    Scanner un autre
-                                </button>
-                            </div>
-                        `;
-                    }
-                })
-                .catch(error => {
-                    container.innerHTML = `
-                        <img src="logo.png" alt="Logo ASTER" class="logo">
-                        <h2>Contrôle des Sorties</h2>
-                        <div class="alert-box" style="background-color: #ef4444;">
-                            <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
-                            <p style="font-size: 12px; margin-top: 5px;">ID : ${codeScanne}</p>
-                        </div>
-                        <button class="btn" onclick="location.reload();">Réessayer</button>
-                    `;
-                });
+                    });
+            }, 600); // 600ms de transition fluide
         }
     </script>
 </body>
