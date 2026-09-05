@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f4f6f9">
+
+  <title>Liste des Inscrits - ASTER</title>
+  
+  <style>
+    * {
+      box-sizing: border-box !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      width: 100%;
+      margin: 0;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f6f9;
+      text-align: center;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .logo-container {
+      margin: 10px auto 15px auto;
+      max-width: 180px;
+      width: 100%;
+    }
+    
+    .logo-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    h2 {
+      color: #333;
+      margin: 10px 0 15px 0;
+      font-size: 1.4em;
+    }
+
+    .members-container-card {
+      text-align: left;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto 20px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .member-item {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+      font-size: 0.85em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .member-item:last-child {
+      border-bottom: none;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #ddd;
+      background-color: #eee;
+      flex-shrink: 0;
+    }
+
+    .badge-count {
+      background-color: #00b894;
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85em;
+      margin-left: 6px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9em;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #00b894;
+    }
+
+    .members-scroll-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .empty-msg {
+      color: #aaa;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo ASTER" id="app-logo">
+  </div>
+
+  <h2>Liste des Inscrits</h2>
+
+  <div style="font-size: 1.1em; font-weight: bold; color: #444; max-width: 480px; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+    Total inscrits <span class="badge-count" id="totalCount">0</span>
+  </div>
+  
+  <div class="members-container-card">
+    <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un membre par nom ou ID..." oninput="filtrerMembres()">
+    <div class="members-scroll-list" id="membersList">
+      <p class="empty-msg">Chargement des membres...</p>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
+    let tousLesMembres = [];
+
+    function chargerMembresJSONP() {
+      const callbackName = "handleMembersResponse_" + Math.floor(Math.random() * 100000);
+      
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        const script = document.getElementById(callbackName);
+        if (script) script.remove();
+
+        if (data && data.success && data.members) {
+          tousLesMembres = data.members;
+          document.getElementById("totalCount").innerText = data.total;
+          afficherMembres(tousLesMembres);
+        } else {
+          document.getElementById("membersList").innerHTML = `<p class="empty-msg" style="color:red;">Erreur: ${data.error || 'Aucun membre trouvé'}</p>`;
+        }
+      };
+
+      const scriptTag = document.createElement("script");
+      scriptTag.id = callbackName;
+      scriptTag.src = `${SCRIPT_URL}?action=getMembers&callback=${callbackName}`;
+      
+      scriptTag.onerror = function() {
+        delete window[callbackName];
+        scriptTag.remove();
+        document.getElementById("membersList").innerHTML = '<p class="empty-msg" style="color:red;">Échec du chargement des inscrits.</p>';
+      };
+
+      document.body.appendChild(scriptTag);
+    }
+
+    function afficherMembres(liste) {
+      const container = document.getElementById("membersList");
+      if (liste.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Aucun résultat trouvé.</p>';
+        return;
+      }
+
+      container.innerHTML = liste.map(m => {
+        const photo = (m.photoUrl && m.photoUrl.length > 5) ? m.photoUrl : 'https://via.placeholder.com/36?text=?';
+        return `
+          <div class="member-item">
+            <div class="user-info">
+              <img class="mini-thumb" src="${photo}" alt="Avatar">
+              <div>
+                <strong style="color:#333; font-size:0.95em;">${m.nom}</strong>
+                <div style="color:#777; font-size:0.8em;">${m.id}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filtrerMembres() {
+      const recherche = document.getElementById("searchInput").value.toLowerCase();
+      const resultats = tousLesMembres.filter(m => 
+        m.nom.toLowerCase().includes(recherche) || m.id.toLowerCase().includes(recherche)
+      );
+      afficherMembres(resultats);
+    }
+
+    chargerMembresJSONP();
+  </script>
+</body>
+</html>
