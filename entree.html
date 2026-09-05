@@ -2,177 +2,114 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f4f6f9">
-
-  <title>Contrôle des Entrées - ASTER</title>
-  
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrée - Saisie Identifiant</title>
   <style>
-    * {
-      box-sizing: border-box !important;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    html, body {
-      width: 100%;
-      margin: 0;
-      padding: 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
       text-align: center;
-      -webkit-text-size-adjust: 100%;
     }
-
-    .card-container {
-      max-width: 440px;
-      width: 100%;
-      margin: 10px auto;
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 24px 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    }
-
-    .logo-container {
-      margin: 0 auto 10px auto;
-      max-width: 140px;
-      width: 100%;
+    h2 { color: #333; margin-bottom: 20px; }
+    
+    .card {
+      max-width: 450px;
+      margin: 0 auto 20px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
     
-    .logo-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
+    .input-group {
+      display: flex;
+      gap: 10px;
     }
 
-    h2 {
-      color: #2d3748;
-      margin: 5px 0 15px 0;
-      font-size: 1.35em;
-      font-weight: 700;
+    input[type="text"] {
+      flex: 1;
+      padding: 14px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 18px;
+      outline: none;
+      transition: border-color 0.2s;
     }
 
-    .scanner-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #1a202c;
+    input[type="text"]:focus {
+      border-color: #00b894;
     }
 
-    #reader {
-      width: 100%;
+    button {
+      padding: 14px 24px;
+      background-color: #00b894;
+      color: white;
       border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
 
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 12px;
+    button:hover {
+      background-color: #00a181;
     }
 
-    .subtitle {
-      color: #718096;
-      font-size: 0.85em;
-      margin-top: 15px;
-      margin-bottom: 0;
+    #resultCard {
+      display: none;
     }
 
-    .status-msg {
-      margin-top: 15px;
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-align: left;
+      margin-bottom: 15px;
+    }
+
+    .user-info img {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #eee;
+      border: 2px solid #ddd;
+    }
+
+    .user-info .name {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #2d3436;
+    }
+
+    .status-box {
       padding: 12px;
       border-radius: 8px;
-      font-size: 0.9em;
-      text-align: center;
-      display: none;
       font-weight: bold;
+      font-size: 1em;
     }
-
-    .status-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .status-error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
+    .status-ok { background: #e6f9f5; color: #00b894; border: 1px solid #a3e9d9; }
+    .status-already { background: #fff9e6; color: #d68910; border: 1px solid #f9e29c; }
+    .status-error { background: #ffecec; color: #d63031; border: 1px solid #f5b7b1; }
   </style>
 </head>
 <body>
 
-  <div class="card-container">
-    <div class="logo-container">
-      <img src="logo.png" alt="Logo ASTER" id="app-logo">
-    </div>
+  <h2>Validation Entrée (ID)</h2>
 
-    <h2>Contrôle des Entrées</h2>
-
-    <div class="scanner-wrapper">
-      <div id="reader"></div>
-    </div>
-
-    <p class="subtitle">Scannez le badge du membre pour valider l'entrée</p>
-
-    <div id="statusMsg" class="status-msg"></div>
+  <div class="card">
+    <form onsubmit="validerSaisie(event)">
+      <div class="input-group">
+        <input type="text" id="manualCode" placeholder="Entrez l'ID du membre..." autofocus autocomplete="off">
+        <button type="submit">Valider</button>
+      </div>
+    </form>
   </div>
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
-    const ACTION = "entree";
-    
-    let html5QrCode = null;
-    let isProcessing = false;
-
-    function afficherMessage(txt, error = false) {
-      const msgBox = document.getElementById("statusMsg");
-      msgBox.style.display = "block";
-      msgBox.className = "status-msg " + (error ? "status-error" : "status-success");
-      msgBox.innerText = txt;
-    }
-
-    function onScanSuccess(decodedText) {
-      if (isProcessing) return;
-      isProcessing = true;
-
-      afficherMessage("Validation en cours...", false);
-
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(decodedText)}`;
-
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "ok") {
-            afficherMessage(`✅ Entrée validée : ${data.name}`);
-          } else {
-            afficherMessage(`❌ ${data.message}`, true);
-          }
-        })
-        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", true))
-        .finally(() => {
-          setTimeout(() => { isProcessing = false; }, 2500);
-        });
-    }
-
-    window.addEventListener("load", () => {
-      html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onScanSuccess
-      ).catch(err => {
-        afficherMessage("❌ Impossible d'accéder à la caméra", true);
-      });
-    });
-  </script>
-</body>
-</html>
+  <div class="card" id="resultCard">
+    <div class="user-info">
+      <img
