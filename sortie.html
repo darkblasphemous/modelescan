@@ -56,6 +56,32 @@
       font-weight: 700;
     }
 
+    /* Style pour la jauge de progression interactive */
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 15px 0 5px 0;
+      display: none;
+    }
+
+    .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background-color: #007bff;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      animation: pulse-bar 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse-bar {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
     .user-photo-container {
       margin: 20px auto;
       width: 110px;
@@ -166,6 +192,10 @@
 
     <h2>Contrôle des Sorties</h2>
 
+    <div class="progress-bar-container" id="progressBarContainer">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+
     <div class="user-photo-container" id="photoContainer">
       <img id="userPhoto" src="" alt="Photo membre">
     </div>
@@ -187,12 +217,28 @@
       const photoContainer = document.getElementById("photoContainer");
       const userPhoto = document.getElementById("userPhoto");
       const btnContainer = document.getElementById("actionButtons");
+      const progressContainer = document.getElementById("progressBarContainer");
+      const progressFill = document.getElementById("progressBarFill");
 
-      // Sécurité anti-bug si l'élément n'est pas encore chargé
       if (!msgBox) return;
 
       msgBox.style.display = "block";
       msgBox.className = "status-box";
+
+      if (type === "loading") {
+        if (progressContainer && progressFill) {
+          progressContainer.style.display = "block";
+          progressFill.style.width = "75%";
+        }
+        msgBox.classList.add("status-loading");
+        msgBox.innerText = titre;
+        return;
+      } else {
+        if (progressContainer && progressFill) {
+          progressFill.style.width = "100%";
+          setTimeout(() => { progressContainer.style.display = "none"; }, 300);
+        }
+      }
 
       if (type === "success") {
         msgBox.classList.add("status-success");
@@ -200,20 +246,14 @@
         msgBox.classList.add("status-warning");
       } else if (type === "error") {
         msgBox.classList.add("status-error");
-      } else {
-        msgBox.classList.add("status-loading");
       }
 
-      if (type === "loading") {
-        msgBox.innerText = titre;
-      } else {
-        let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
-        msgBox.innerHTML = `
-          <div class="msg-title">${titre}</div>
-          <div class="msg-name">${nom}</div>
-          ${heureHtml}
-        `;
-      }
+      let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
+      msgBox.innerHTML = `
+        <div class="msg-title">${titre}</div>
+        <div class="msg-name">${nom}</div>
+        ${heureHtml}
+      `;
 
       if (photoContainer && userPhoto) {
         if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
@@ -250,8 +290,7 @@
         return;
       }
 
-      // Message de patience immédiat
-      afficherResultat("⏳ Vérification en cours, veuillez patienter...", "", memberId, "", "loading", "", "");
+      afficherResultat("Vérification en cours...", "", memberId, "", "loading", "", "");
 
       const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
 
@@ -267,7 +306,7 @@
           if (data.status === "ok") {
             afficherResultat("✓ SORTIE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo, "ok");
           } else if (data.status === "require_survey") {
-            afficherResultat("⚠ Veuillez remplir l'enquête de satisfaction avant de sortir.", nomMembrè = nomMembre, memberId, "", "warning", data.photo, "require_survey");
+            afficherResultat("⚠ Veuillez remplir l'enquête de satisfaction avant de sortir.", nomMembre, memberId, "", "warning", data.photo, "require_survey");
           } else if (data.status === "no_entry") {
             afficherResultat("⚠ Impossible de pointer la sortie : aucune entrée enregistrée.", nomMembre, memberId, "", "warning", data.photo, "no_entry");
           } else if (data.status === "already_scanned") {
