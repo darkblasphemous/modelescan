@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle de Sortie - ASTER</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .card {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        .logo {
+            max-width: 130px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        #reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 15px auto;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .status-box {
+            padding: 25px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 1.5;
+            display: none;
+        }
+        .success-bg {
+            background-color: #17a2b8; /* Vert vif */
+        }
+        .error-bg {
+            background-color: #ef4444; /* Rouge pour les erreurs techniques */
+        }
+        .warning-bg {
+            background-color: #f97316; /* Orange vif et bien voyant */
+            color: white;
+        }
+        .loading-bg {
+            background-color: #6b7280; /* Gris chargement */
+        }
+        /* Style pour la photo du membre */
+        #member-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 3px solid #10b981;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            margin-top: 5px;
+        }
+        .btn-blue {
+            background-color: #007bff;
+        }
+        .btn-blue:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <img src="logo.png" alt="Logo ASTER" class="logo">
+        <h3>Contrôle des Sorties</h3>
+
+        <!-- Étape 1 : Le Scanner Caméra -->
+        <div id="scanner-container">
+            <div id="reader"></div>
+            <p style="font-size: 14px; color: #666;">Scannez le badge du membre pour valider la sortie</p>
+        </div>
+
+        <!-- Étape 2 : Le Grand Bloc de Résultat (Masqué par défaut) -->
+        <div id="result-container" style="display: none;">
+            <img id="member-photo" src="" alt="Photo du membre">
+            <div id="message-box" class="status-box"></div>
+            <div id="action-area"></div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrCode;
+        const scriptUrl = "=====================================================================================================url ici";
+
+        function verifierID(memberId) {
+            document.getElementById('scanner-container').style.display = 'none';
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.style.display = 'block';
+            
+            // Masquer la photo pendant le chargement
+            document.getElementById('member-photo').style.display = 'none';
+
+            const msgBox = document.getElementById('message-box');
+            msgBox.className = "status-box loading-bg";
+            msgBox.style.display = "block";
+            msgBox.innerHTML = "Vérification de la sortie en cours...";
+
+            // Appel de l'action de sortie
+            fetch(`${scriptUrl}?code=${encodeURIComponent(memberId)}&action=sortie`)
+                .then(response => response.json())
+                .then(data => {
+                    const actionArea = document.getElementById('action-area');
+                    actionArea.innerHTML = '';
+
+                    // Gestion de l'affichage de la photo si elle est présente dans le JSON
+                    const imgElem = document.getElementById('member-photo');
+                    if (data.photo && data.photo.trim() !== "") {
+                        imgElem.src = data.photo;
+                        imgElem.style.display = 'inline-block';
+                    } else {
+                        imgElem.style.display = 'none';
+                    }
+
+                    if (data.status === "ok") {
+                        msgBox.className = "status-box success-bg";
+                        msgBox.innerHTML = `✓ SORTIE VALIDÉE<br><span style="font-size: 18px; font-weight: bold;">${data.name}</span><br><small>ID : ${memberId}</small>`;
+                    } else if (data.status === "enquete_requise") {
+                        msgBox.className = "status-box warning-bg";
+                        msgBox.innerHTML = `⚠️ ${data.message}<br><span style="font-size: 18px; font-weight: bold;">${data.name}</span>`;
+                        
+                        // Bouton vers l'enquête Google Forms
+                        const btnEnquete = document.createElement('a');
+                        btnEnquete.className = "btn btn-blue";
+                        btnEnquete.style.marginRight = "10px";
+                        btnEnquete.innerText = "Remplir l'enquête";
+                        btnEnquete.href = data.url;
+                        btnEnquete.target = "_blank";
+                        actionArea.appendChild(btnEnquete);
+                    } else if (data.status === "deja_sorti") {
+                        msgBox.className = "status-box warning-bg";
+                        msgBox.innerHTML = `⚠️ ${data.message}`;
+                    } else {
+                        msgBox.className = "status-box warning-bg";
+                        msgBox.innerHTML = `⚠️ ${data.message || "Sortie impossible ou membre non présent."}`;
+                    }
+
+                    const btn = document.createElement('button');
+                    btn.className = "btn btn-blue";
+                    btn.innerText = "Scanner un autre";
+                    btn.onclick = () => location.href = "sortie.html";
+                    actionArea.appendChild(btn);
+                })
+                .catch(error => {
+                    msgBox.className = "status-box error-bg";
+                    msgBox.innerHTML = "❌ Erreur de connexion au serveur.";
+                    const btn = document.createElement('button');
+                    btn.className = "btn btn-blue";
+                    btn.innerText = "Réessayer";
+                    btn.onclick = () => location.href = "sortie.html";
+                    document.getElementById('action-area').appendChild(btn);
+                    console.error('Erreur:', error);
+                });
+        }
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const memberId = urlParams.get('id') || urlParams.get('code');
+
+            if (memberId) {
+                verifierID(memberId.trim());
+            } else {
+                html5QrCode = new Html5Qrcode("reader");
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: 250 },
+                    (decodedText) => {
+                        html5QrCode.stop().then(() => {
+                            let cleanId = decodedText;
+                            try {
+                                if (decodedText.includes('?')) {
+                                    const urlObj = new URL(decodedText);
+                                    cleanId = urlObj.searchParams.get('id') || urlObj.searchParams.get('code') || decodedText;
+                                }
+                            } catch (e) {}
+                            verifierID(cleanId.trim());
+                        });
+                    }
+                ).catch(err => {
+                    console.error("Erreur caméra : " + err);
+                });
+            }
+        };
+    </script>
+</body>
+</html>
