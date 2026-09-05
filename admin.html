@@ -54,7 +54,7 @@
     .counters-container {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
@@ -64,10 +64,10 @@
       align-items: center;
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 20px;
       font-weight: 600;
-      font-size: 0.9em;
+      font-size: 0.85em;
       color: #4a5568;
       box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     }
@@ -101,14 +101,14 @@
       box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.15);
     }
 
-    /* Liste des membres / Résultats */
+    /* Liste des membres */
     .members-list {
-      max-height: 380px;
+      max-height: 400px;
       overflow-y: auto;
       text-align: left;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .member-item {
@@ -117,8 +117,24 @@
       align-items: center;
       padding: 10px 12px;
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #edf2f7;
+    }
+
+    .member-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Avatar / Photo du membre */
+    .member-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e2e8f0;
+      background-color: #edf2f7;
     }
 
     .member-info {
@@ -129,18 +145,25 @@
     .member-name {
       font-weight: bold;
       color: #2d3748;
-      font-size: 0.95em;
+      font-size: 0.9em;
       text-transform: uppercase;
     }
 
     .member-id {
-      font-size: 0.75em;
+      font-size: 0.73em;
       color: #718096;
     }
 
+    .member-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
     .status-pill {
-      font-size: 0.75em;
-      padding: 4px 8px;
+      font-size: 0.72em;
+      padding: 4px 10px;
       border-radius: 6px;
       font-weight: bold;
       color: white;
@@ -149,6 +172,12 @@
     .status-present { background-color: #17a2b8; }
     .status-out { background-color: #e53e3e; }
     .status-none { background-color: #a0aec0; }
+
+    .time-info {
+      font-size: 0.7em;
+      color: #718096;
+      font-weight: 500;
+    }
 
     .msg-state {
       padding: 20px;
@@ -171,7 +200,7 @@
 
     <h2>Liste des Inscrits</h2>
 
-    <!-- Compteurs -->
+    <!-- Compteurs In / Out / Inscrits -->
     <div class="counters-container">
       <div class="counter-badge badge-in">In: <span id="countIn">0</span></div>
       <div class="counter-badge badge-out">Out: <span id="countOut">0</span></div>
@@ -188,7 +217,6 @@
   </div>
 
   <script>
-    // Remplacez par l'URL de votre web app Google Apps Script
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
     
     let tousLesMembres = [];
@@ -239,18 +267,35 @@
       let html = "";
       membres.forEach(m => {
         let statutClass = "status-none";
-        let statutTexte = m.statut || "Non scanné";
-        
+        let statutTexte = m.statut || "Inscrit";
         if (m.statut === "Présent") statutClass = "status-present";
         else if (m.statut === "Sorti") statutClass = "status-out";
+        else if (m.statut === "Non scanné") statutTexte = "Inscrit";
+
+        // Gestion de l'heure à afficher sous le statut
+        let timeHtml = "";
+        if (m.statut === "Présent" && m.arrivee) {
+          timeHtml = `<span class="time-info">Arrivée : ${m.arrivee}</span>`;
+        } else if (m.statut === "Sorti" && m.depart) {
+          timeHtml = `<span class="time-info">Départ : ${m.depart}</span>`;
+        }
+
+        // Gestion de l'image (si vide, on met une image par défaut ou une silhouette)
+        let photoUrl = m.photo && m.photo.startsWith("http") ? m.photo : "https://via.placeholder.com/150?text=?";
 
         html += `
           <div class="member-item">
-            <div class="member-info">
-              <span class="member-name">${m.name || "Inconnu"}</span>
-              <span class="member-id">${m.id || ""}</span>
+            <div class="member-left">
+              <img src="${photoUrl}" alt="Photo" class="member-avatar" onerror="this.src='https://via.placeholder.com/150?text=?'">
+              <div class="member-info">
+                <span class="member-name">${m.name || "Inconnu"}</span>
+                <span class="member-id">${m.id || ""}</span>
+              </div>
             </div>
-            <span class="status-pill ${statutClass}">${statutTexte}</span>
+            <div class="member-right">
+              <span class="status-pill ${statutClass}">${statutTexte}</span>
+              ${timeHtml}
+            </div>
           </div>
         `;
       });
