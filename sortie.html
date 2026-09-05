@@ -178,8 +178,8 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5ZyTj5L2QXDzTKknCcEK5HKqVQOELj2wqb4otBXciSZanFQdd5PgY75iKaewHITF/exec";
     
-    // Remplacez cette URL par le lien de votre formulaire d'enquête externe (ex: Google Forms)
-    const URL_FORMULAIRE_ENQUETE = "https://forms.gle/votre-lien-de-formulaire";
+    // Votre URL Google Forms configurée pour l'enquête
+    const URL_FORMULAIRE_ENQUETE = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform";
 
     function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
       const msgBox = document.getElementById("statusMsg");
@@ -222,7 +222,7 @@
     window.addEventListener("load", () => {
       const urlParams = new URLSearchParams(window.location.search);
       
-      // Récupère l'ID depuis l'URL, ou utilise l'ID par défaut 648947853 si aucun n'est fourni
+      // Récupère l'ID depuis l'URL, ou utilise l'ID par défaut 648947853
       const memberId = urlParams.get('id') || urlParams.get('code') || "648947853";
 
       if (!memberId) {
@@ -244,8 +244,8 @@
           if (data.status === "ok") {
             afficherResultat("✓ SORTIE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
           } else if (data.status === "require_survey") {
-            // Redirection vers le formulaire externe avec l'ID du membre
-            window.location.href = `${URL_FORMULAIRE_ENQUETE}?id=${encodeURIComponent(memberId)}`;
+            // Redirection vers votre Google Form (ajoutez l'élément entry si vous souhaitez pré-remplir l'ID)
+            window.location.href = `${URL_FORMULAIRE_ENQUETE}?usp=pp_url&entry.123456789=${encodeURIComponent(memberId)}`;
           } else if (data.status === "already_scanned") {
             afficherResultat("⚠ DÉJÀ ENREGISTRÉ", nomMembre, memberId, nowTime, "warning", data.photo);
           } else {
