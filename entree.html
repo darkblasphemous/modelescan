@@ -138,19 +138,33 @@
       msgBox.innerText = txt;
     }
 
-    function onScanSuccess(decodedText) {
+    function traiterCode(codeId) {
       if (isProcessing) return;
       isProcessing = true;
 
       afficherMessage("Validation en cours...", false);
 
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(decodedText)}`;
+      // Si le code scanné est une URL complète contenant ?id=... on extrait l'ID proprement
+      let cleanId = codeId;
+      try {
+        if (codeId.includes("?")) {
+          const urlObj = new URL(codeId);
+          const paramId = urlObj.searchParams.get("id");
+          if (paramId) cleanId = paramId;
+        }
+      } catch (e) {
+        // Ce n'est pas une URL, on garde le texte brut (ex: ID simple)
+      }
+
+      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(cleanId)}`;
 
       fetch(url)
         .then(res => res.json())
         .then(data => {
           if (data.status === "ok") {
             afficherMessage(`✅ Entrée validée : ${data.name}`);
+          } else if (data.status === "already_scanned") {
+            afficherMessage(`⚠️ ${data.message}`);
           } else {
             afficherMessage(`❌ ${data.message}`, true);
           }
@@ -162,15 +176,27 @@
     }
 
     window.addEventListener("load", () => {
+      // 1. Vérifier si l'URL contient directement un paramètre ?id=... (Ouverture directe par lien)
+      const urlParams = new URLSearchParams(window.location.search);
+      const idFromUrl = urlParams.get('id');
+
+      if (idFromUrl) {
+        traiterCode(idFromUrl);
+      }
+
+      // 2. Initialiser la caméra pour le scan en direct des QR codes
       html5QrCode = new Html5Qrcode("reader");
       const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
       html5QrCode.start(
         { facingMode: "environment" },
         config,
-        onScanSuccess
+        (decodedText) => {
+          traiterCode(decodedText);
+        }
       ).catch(err => {
-        afficherMessage("❌ Impossible d'accéder à la caméra", true);
+        // Si la caméra échoue (ex: refus ou absence de caméra), on affiche un message discret mais le lien URL fonctionnera toujours
+        console.warn("Caméra non disponible :", err);
       });
     });
   </script>
