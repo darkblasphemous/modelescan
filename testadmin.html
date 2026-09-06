@@ -234,6 +234,7 @@
     </div>
 
     <script>
+        // Remplace par l'URL de déploiement de ton script Google Apps Script
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
         let allMembers = [];
 
@@ -293,7 +294,6 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Utilisation directe de m.heureIn (qui récupère la colonne Arrivée formatée par ton script)
                 let heureArrivee = (m.heureIn && m.heureIn !== "--:--") ? m.heureIn : "";
                 let heureDisplay = heureArrivee ? `<span class="heure-text">${heureArrivee}</span>` : ``;
 
@@ -324,7 +324,6 @@
             document.getElementById('modal-id').innerText = m.id || "";
             document.getElementById('modal-email').innerText = m.email || "Non renseigné";
             
-            // Correspondance avec les variables du script Google Apps Script (heureIn / heureOut)
             document.getElementById('modal-in').innerText = m.heureIn || "--:--";
             document.getElementById('modal-out').innerText = m.heureOut || "--:--";
             document.getElementById('modal-status').innerText = m.statut || "Inscrit";
