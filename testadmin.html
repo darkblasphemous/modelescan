@@ -61,7 +61,7 @@
 
         .badge-in { background-color: #10b981; }
         .badge-out { background-color: #ef4444; }
-        .badge-inscrits { background-color: #0047ab; } /* Bleu plus fort */
+        .badge-inscrits { background-color: #0284c7; } /* Bleu moins vif */
 
         /* Conteneur principal */
         .main-card {
@@ -88,7 +88,7 @@
         }
 
         .search-box:focus {
-            border-color: #0047ab; /* Bleu plus fort */
+            border-color: #0284c7;
         }
 
         /* Liste des membres */
@@ -113,8 +113,8 @@
         }
 
         .member-item:hover {
-            border-color: #0047ab;
-            background: #f0f4ff;
+            border-color: #0284c7;
+            background: #f0f9ff;
         }
 
         .member-left {
@@ -164,7 +164,7 @@
 
         .status-badge.present { background-color: #d1fae5; color: #065f46; }
         .status-badge.sorti { background-color: #fee2e2; color: #991b1b; }
-        .status-badge.inscrit { background-color: #e0f2fe; color: #0047ab; }
+        .status-badge.inscrit { background-color: #e0f2fe; color: #0369a1; }
 
         .heure-text {
             font-size: 11px;
@@ -182,13 +182,13 @@
             text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: scaleUp 0.2s ease;
         }
         @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 4px solid #0047ab; } /* Bleu plus fort */
+        .modal img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 4px solid #0284c7; } /* Bleu adouci */
         .modal h3 { margin: 0 0 4px 0; color: #1e293b; font-size: 20px; font-weight: 800; }
         .modal-details { text-align: left; background: #f8fafc; padding: 15px; border-radius: 16px; margin: 20px 0; font-size: 14px; color: #334155; border: 1px solid #e2e8f0; }
         .modal-details p { margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
         .modal-details span { font-weight: 700; color: #0f172a; }
-        .btn-close { width: 100%; padding: 14px; background: #0047ab; color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; } /* Bleu plus fort */
-        .btn-close:hover { background: #003380; }
+        .btn-close { width: 100%; padding: 14px; background: #0284c7; color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; } /* Bleu adouci */
+        .btn-close:hover { background: #0369a1; }
     </style>
 </head>
 <body>
@@ -223,7 +223,7 @@
             <div id="modal-id" style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px;">ID</div>
             
             <div class="modal-details">
-                <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0047ab;">--</span></p>
+                <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0284c7;">--</span></p>
                 <p>📥 Entrée (IN) : <span id="modal-in">--:--</span></p>
                 <p>📤 Sortie (OUT) : <span id="modal-out">--:--</span></p>
                 <p>📌 Statut : <span id="modal-status">--</span></p>
@@ -280,7 +280,7 @@
                 return;
             }
 
-            container.innerHTML = members.map((m, index) => {
+            container.innerHTML = members.map(m => {
                 let nom = m.nom || "Membre";
                 let id = m.id || "";
                 
@@ -293,9 +293,9 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Utilisation correcte de heureIn (ou heure par défaut)
-                let heureAffichage = m.heureIn || m.heure || "--:--";
-                let heureDisplay = `<span class="heure-text">${heureAffichage}</span>`;
+                // Récupération sécurisée des heures (prend en compte tous les noms possibles de champs)
+                let heureEntree = m.heureEntree || m.heureIn || m.heure || "--:--";
+                let heureDisplay = `<span class="heure-text">${heureEntree}</span>`;
 
                 return `
                     <div class="member-item" onclick="openModal('${m.id}')">
@@ -320,12 +320,14 @@
             if (!m) return;
 
             document.getElementById('modal-photo').src = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
-            document.getElementById('modal-name').innerText = m.nom;
-            document.getElementById('modal-id').innerText = m.id;
+            document.getElementById('modal-name').innerText = m.nom || "Membre";
+            document.getElementById('modal-id').innerText = m.id || "";
             document.getElementById('modal-email').innerText = m.email || "Non renseigné";
-            document.getElementById('modal-in').innerText = m.heureIn || m.heure || "--:--";
-            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
-            document.getElementById('modal-status').innerText = m.statut;
+            
+            // Assignation correcte des heures Entrée et Sortie
+            document.getElementById('modal-in').innerText = m.heureEntree || m.heureIn || m.heure || "--:--";
+            document.getElementById('modal-out').innerText = m.heureSortie || m.heureOut || "--:--";
+            document.getElementById('modal-status').innerText = m.statut || "Inscrit";
 
             document.getElementById('modal').classList.add('active');
         }
