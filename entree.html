@@ -37,7 +37,7 @@
             margin: 0 0 20px 0;
         }
 
-        /* Photo pour l'entrée réussie */
+        /* Photo Membre pour Validation Réussie */
         .photo-container {
             width: 130px;
             height: 130px;
@@ -57,7 +57,7 @@
             object-fit: cover;
         }
 
-        /* Image/Logo orange pour l'avertissement */
+        /* Cadre Orange Avertissement */
         .warning-logo-container {
             width: 130px;
             height: 130px;
@@ -90,7 +90,6 @@
         .alert-danger { background-color: #ef4444; color: white; }
         .alert-info { background-color: #e2e8f0; color: #475569; }
 
-        /* Textes Succès */
         .status-title {
             font-size: 15px;
             font-weight: 700;
@@ -109,7 +108,6 @@
             opacity: 0.9;
         }
 
-        /* Textes Avertissement Orange */
         .warning-title {
             font-size: 18px;
             font-weight: 800;
@@ -121,7 +119,6 @@
             opacity: 0.95;
         }
 
-        /* Boutons */
         .btn {
             width: 100%;
             padding: 14px;
@@ -151,10 +148,10 @@
             <div class="alert-box alert-info">Validation en cours...</div>
         </div>
 
-        <!-- ÉCRAN 2 : Succès Entrée (Design Vert) -->
+        <!-- ÉCRAN 2 : Succès Entrée -->
         <div id="screen-success" class="screen">
             <div class="photo-container">
-                <img id="img-success" src="" alt="Photo" onerror="this.src='logo.png'">
+                <img id="img-success" src="logo.png" alt="Photo Membre" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-success">
                 <div class="status-title">✓ ENTRÉE VALIDÉE</div>
@@ -164,13 +161,13 @@
             <button class="btn" onclick="resetPage()">Scanner un autre</button>
         </div>
 
-        <!-- ÉCRAN 3 : Déjà Présent (Design Orange Avertissement) -->
+        <!-- ÉCRAN 3 : Déjà Présent -->
         <div id="screen-already" class="screen">
             <div class="warning-logo-container">
                 <img id="img-already" src="logo.png" alt="ASTER" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-warning">
-                <div class="warning-title">⚠️ <span id="name-already">Mr GAHAN Dave</span> est déjà présent.</div>
+                <div class="warning-title">⚠️ <span id="name-already">Membre</span> est déjà présent.</div>
                 <div class="warning-subtext">Enregistré à : <span id="time-already">--:--</span></div>
             </div>
             <button class="btn" onclick="resetPage()">Terminer</button>
@@ -187,7 +184,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
 
         function convertDriveUrl(url) {
-            if (!url || !url.startsWith("http")) return "logo.png";
+            if (!url || typeof url !== "string" || !url.startsWith("http")) return "logo.png";
             if (url.includes("drive.google.com")) {
                 let id = "";
                 const matchId = url.match(/\/d\/([^\/]+)/);
@@ -199,7 +196,6 @@
             return url;
         }
 
-        // Nettoie l'affichage des dates brutes de Google Script
         function formatHeure(heureRaw) {
             if (!heureRaw) return "--:--";
             const str = String(heureRaw);
@@ -215,20 +211,28 @@
 
         function showLoadingScreen() { showScreen('screen-loading'); }
 
-        function showSuccessScreen(nom, id, photo) {
+        function showSuccessScreen(nom, id, photoUrl) {
             document.getElementById('name-success').innerText = nom || "Membre";
             document.getElementById('id-success').innerText = id || "---";
-            document.getElementById('img-success').src = convertDriveUrl(photo);
+            
+            const imgElement = document.getElementById('img-success');
+            if (photoUrl) {
+                imgElement.src = convertDriveUrl(photoUrl);
+            } else {
+                imgElement.src = "logo.png";
+            }
             showScreen('screen-success');
         }
 
-        function showAlreadyInScreen(nom, photo, heure) {
+        function showAlreadyInScreen(nom, photoUrl, heure) {
             document.getElementById('name-already').innerText = nom || "Membre";
             document.getElementById('time-already').innerText = formatHeure(heure);
-            if (photo && photo.startsWith("http")) {
-                document.getElementById('img-already').src = convertDriveUrl(photo);
+            
+            const imgElement = document.getElementById('img-already');
+            if (photoUrl) {
+                imgElement.src = convertDriveUrl(photoUrl);
             } else {
-                document.getElementById('img-already').src = "logo.png";
+                imgElement.src = "logo.png";
             }
             showScreen('screen-already');
         }
@@ -270,10 +274,13 @@
         window.handleScanResponse = function(response) {
             console.log("Réponse serveur :", response);
 
+            // Récupération de l'image (compatibilité response.photo ou response.photoUrl)
+            const photo = response.photo || response.photoUrl;
+
             if (response.status === "success") {
-                showSuccessScreen(response.nom, response.id || currentScannedId, response.photoUrl);
+                showSuccessScreen(response.nom, response.id || currentScannedId, photo);
             } else if (response.status === "already_in") {
-                showAlreadyInScreen(response.nom, response.photoUrl, response.heure);
+                showAlreadyInScreen(response.nom, photo, response.heure);
             } else {
                 showErrorScreen(response.message || "Erreur lors de la validation.");
             }
