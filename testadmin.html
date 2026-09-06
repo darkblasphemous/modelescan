@@ -248,20 +248,8 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Extraction propre de l'heure sans bloquer les horaires valides
-                let heureClean = "";
-                if (m.heure) {
-                    let hStr = m.heure.toString().trim();
-                    if (hStr.includes(":")) {
-                        let parts = hStr.split(" ");
-                        let found = parts.find(p => p.includes(":"));
-                        heureClean = found ? found.substring(0, 5) : hStr.substring(0, 5);
-                    } else if (!hStr.toLowerCase().includes("sat") && !hStr.toLowerCase().includes("sun")) {
-                        heureClean = hStr;
-                    }
-                }
-
-                let heureDisplay = heureClean ? `<span class="heure-text">${heureClean}</span>` : '';
+                // Affichage direct de l'heure renvoyée par le script Apps Script
+                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
 
                 return `
                     <div class="member-item">
