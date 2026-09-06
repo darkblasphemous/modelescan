@@ -126,7 +126,7 @@
 <body>
 
     <div class="container">
-        <!-- Utilisation directe de logo.png -->
+        <!-- Logo intégré -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
@@ -217,8 +217,8 @@
         }
 
         function ouvrirEnquete(idMembre) {
-            // URL du formulaire d'enquête Google Forms intégrée avec passage direct de l'ID en paramètre si besoin
-            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=header";
+            // URL du formulaire Google Forms avec transmission dynamique de l'ID unique
+            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.ID-UNIQUE=" + encodeURIComponent(idMembre);
             window.open(urlFormulaire, "_blank");
         }
 
