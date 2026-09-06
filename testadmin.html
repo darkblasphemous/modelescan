@@ -34,7 +34,7 @@
         }
         input[type="text"]:focus { border-color: #0066ff; }
 
-        /* Liste des membres (Style de ta capture) */
+        /* Liste des membres */
         .members-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px; }
         .member-card {
             display: flex; align-items: center; justify-content: space-between;
@@ -121,7 +121,8 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "TON_URL_APPS_SCRIPT_ICI/exec";
+        // URL du script intégrée directement
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
         let allMembers = [];
 
         function loadData() {
@@ -185,7 +186,6 @@
         }
 
         function openModal(index) {
-            // Recherche par rapport au filtre actuel ou direct
             const m = allMembers[index];
             if (!m) return;
 
@@ -193,7 +193,7 @@
             document.getElementById('modal-name').innerText = m.nom;
             document.getElementById('modal-id').innerText = m.id;
             document.getElementById('modal-email').innerText = m.email || "Non renseigné";
-            document.getElementById('modal-in').innerText = m.heureIn || m.heure || "--:--";
+            document.getElementById('modal-in').innerText = m.heureIn || "--:--";
             document.getElementById('modal-out').innerText = m.heureOut || "--:--";
             document.getElementById('modal-status').innerText = m.statut;
 
