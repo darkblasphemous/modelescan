@@ -37,7 +37,6 @@
             margin: 0 0 20px 0;
         }
 
-        /* Cadre de la photo du membre */
         .photo-container {
             width: 130px;
             height: 130px;
@@ -118,6 +117,7 @@
         <!-- ÉCRAN 2 : Succès Sortie -->
         <div id="screen-success" class="screen">
             <div class="photo-container">
+                <!-- S'il n'y a pas de vraie photo, on met une icône par défaut ou un avatar neutre -->
                 <img id="img-success" src="logo.png" alt="Photo" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-success">
@@ -138,13 +138,12 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
 
-        // Conversion robuste des liens Google Drive et autres
         function convertDriveUrl(url) {
-            if (!url || typeof url !== "string") return "logo.png";
+            if (!url || typeof url !== "string") return "";
             let cleanUrl = url.trim();
-            if (!cleanUrl.startsWith("http")) return "logo.png";
+            // Si ce n'est pas un lien HTTP (ex: texte brut comme "Le 05 septembre"), on ignore
+            if (!cleanUrl.startsWith("http")) return "";
 
-            // Si c'est un lien Google Drive, on extrait l'ID pour forcer l'affichage direct
             if (cleanUrl.includes("drive.google.com") || cleanUrl.includes("docs.google.com")) {
                 let fileId = "";
                 const matchId = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -173,10 +172,14 @@
             
             const imgElement = document.getElementById('img-success');
             const finalPhotoUrl = convertDriveUrl(photoUrl);
-            console.log("URL Photo originale:", photoUrl);
-            console.log("URL Photo convertie:", finalPhotoUrl);
             
-            imgElement.src = finalPhotoUrl;
+            if (finalPhotoUrl) {
+                imgElement.src = finalPhotoUrl;
+                imgElement.style.display = "block";
+            } else {
+                // Si aucune URL valide n'est renvoyée, on cache l'image ou on met une image générique
+                imgElement.src = "logo.png"; 
+            }
             showScreen('screen-success');
         }
 
@@ -217,7 +220,6 @@
         window.handleScanResponse = function(response) {
             console.log("Réponse serveur :", response);
 
-            // Récupère la photo peu importe le nom de la clé renvoyée par le script
             const photo = response.photo || response.photoUrl || response.image;
 
             if (response.status === "success") {
