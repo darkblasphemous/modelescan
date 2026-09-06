@@ -1,5 +1,155 @@
-<script>
-        // Récupération automatique de l'ID passé dans l'URL (ex: sortie.html?code=12345)
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle des Sorties - ASTER</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 40px 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 440px;
+            box-sizing: border-box;
+        }
+        .logo {
+            width: 130px;
+            height: 130px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #1e293b;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .avatar-container {
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: center;
+        }
+        .avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #10b981;
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
+            background-color: #e2e8f0;
+        }
+        .alert-box-success {
+            background-color: #0e94b2;
+            color: white;
+            padding: 24px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 18px rgba(14, 148, 178, 0.3);
+            text-align: center;
+        }
+        .alert-box-success p {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .alert-box-success .member-name {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .alert-box-success .member-id {
+            font-size: 13.5px;
+            font-weight: 500;
+            opacity: 0.95;
+            letter-spacing: 0.3px;
+        }
+        .alert-box-orange {
+            background-color: #f97316;
+            color: white;
+            padding: 22px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            text-align: center;
+        }
+        .alert-box-orange p {
+            margin: 0 0 6px 0;
+            font-size: 14.5px;
+            font-weight: 500;
+        }
+        .alert-box-orange strong {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-top: 5px;
+        }
+        .buttons-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Logo intégré -->
+        <img src="logo.png" alt="Logo ASTER" class="logo">
+        
+        <h2>Contrôle des Sorties</h2>
+
+        <!-- Avatar du membre -->
+        <div class="avatar-container">
+            <img id="member-avatar" src="" alt="" class="avatar">
+        </div>
+
+        <!-- Zone dynamique -->
+        <div id="dynamic-content">
+            <div class="alert-box-success">
+                <p>✓ EN ATTENTE DE SCAN</p>
+                <span class="member-name">--</span>
+                <span class="member-id">ID : --</span>
+            </div>
+            <div class="buttons-group">
+                <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const codeMembre = urlParams.get('code') || urlParams.get('id');
@@ -9,10 +159,9 @@
             }
         };
 
-        // Fonction qui interroge ton script Google Apps Script (doGet)
         function appelerAPI(code) {
-            // ⚠️ Remplace cette URL par l'URL de déploiement web de ton script Apps Script
-            const urlAppsScript = "VOTRE_URL_DEPLOIEMENT_APPS_SCRIPT?action=sortie&code=" + encodeURIComponent(code);
+            // URL de ton déploiement Apps Script intégrée directement
+            const urlAppsScript = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec?action=sortie&code=" + encodeURIComponent(code);
 
             fetch(urlAppsScript)
                 .then(response => response.json())
@@ -68,10 +217,13 @@
         }
 
         function ouvrirEnquete(idMembre) {
-            window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform?entry.ID=" + idMembre, "_blank");
+            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=header";
+            window.open(urlFormulaire, "_blank");
         }
 
         function nouveauScan() {
-            window.location.href = "sortie.html"; // Remet la page prête pour un nouveau scan
+            window.location.href = "sortie.html";
         }
     </script>
+</body>
+</html>
