@@ -36,41 +36,57 @@
             font-weight: 800;
             margin: 0 0 20px 0;
         }
+
+        /* Photo Membre pour la Sortie (Cadre Rouge) */
         .photo-container {
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            margin: 10px auto 20px auto;
-            border: 4px solid #ff4757;
+            margin: 10px auto 25px auto;
+            border: 4px solid #ef4444;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         .photo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
+        /* Boîtes d'alerte */
         .alert-box {
             width: 100%;
-            padding: 16px;
+            padding: 20px 15px;
             border-radius: 16px;
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             line-height: 1.4;
         }
-        .alert-success { background-color: #ff4757; color: white; }
-        .alert-danger { background-color: #e2e8f0; color: #1e293b; }
+        .alert-success { background-color: #ef4444; color: white; }
+        .alert-danger { background-color: #ef4444; color: white; }
         .alert-info { background-color: #e2e8f0; color: #475569; }
-        
-        .heure-text {
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 6px;
+
+        .status-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
+        .user-name {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .user-id {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -78,20 +94,13 @@
             border: none;
             background-color: #0066ff;
             color: white;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 10px;
+            transition: background 0.2s;
         }
-        .input-code {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #cbd5e1;
-            border-radius: 10px;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
+        .btn:hover { background-color: #0052cc; }
+
         .screen { display: none; }
         .screen.active { display: block; }
     </style>
@@ -110,21 +119,20 @@
         <!-- ÉCRAN 2 : Succès Sortie -->
         <div id="screen-success" class="screen">
             <div class="photo-container">
-                <img id="img-success" src="" alt="Photo" onerror="this.src='logo.png'">
+                <img id="img-success" src="logo.png" alt="Photo Membre" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-success">
-                <span id="name-success">Membre</span>
-                <div class="heure-text">Sortie enregistrée à : <span id="time-success">--:--</span></div>
+                <div class="status-title">✓ SORTIE ENREGISTRÉE</div>
+                <div class="user-name" id="name-success">Nom Membre</div>
+                <div class="user-id">ID : <span id="id-success">---</span></div>
             </div>
-            <button class="btn" onclick="resetPage()">Terminer</button>
+            <button class="btn" onclick="resetPage()">Scanner un autre</button>
         </div>
 
-        <!-- ÉCRAN 3 : Saisie Manuelle / Erreur -->
+        <!-- ÉCRAN 3 : Erreur -->
         <div id="screen-error" class="screen">
-            <div class="alert-box alert-danger" id="error-message">Aucun ID détecté.</div>
-            <input type="text" id="manual-id" class="input-code" placeholder="Saisir ou scanner un ID">
-            <button class="btn" onclick="validerSaisieManuelle()">Valider la Sortie</button>
-            <button class="btn" style="background-color: #64748b;" onclick="resetPage()">Réinitialiser</button>
+            <div class="alert-box alert-danger" id="error-message">Erreur lors de la validation.</div>
+            <button class="btn" onclick="resetPage()">Réessayer</button>
         </div>
     </div>
 
@@ -132,7 +140,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
 
         function convertDriveUrl(url) {
-            if (!url || !url.startsWith("http")) return "logo.png";
+            if (!url || typeof url !== "string" || !url.startsWith("http")) return "logo.png";
             if (url.includes("drive.google.com")) {
                 let id = "";
                 const matchId = url.match(/\/d\/([^\/]+)/);
@@ -151,10 +159,16 @@
 
         function showLoadingScreen() { showScreen('screen-loading'); }
 
-        function showSuccessScreen(nom, photo, heure) {
+        function showSuccessScreen(nom, id, photoUrl) {
             document.getElementById('name-success').innerText = nom || "Membre";
-            document.getElementById('time-success').innerText = heure || "--:--";
-            document.getElementById('img-success').src = convertDriveUrl(photo);
+            document.getElementById('id-success').innerText = id || "---";
+            
+            const imgElement = document.getElementById('img-success');
+            if (photoUrl) {
+                imgElement.src = convertDriveUrl(photoUrl);
+            } else {
+                imgElement.src = "logo.png";
+            }
             showScreen('screen-success');
         }
 
@@ -167,16 +181,9 @@
             window.location.href = window.location.pathname;
         }
 
-        function validerSaisieManuelle() {
-            const val = document.getElementById('manual-id').value;
-            if (val) {
-                validerSortie(val);
-            }
-        }
-
         function validerSortie(idScanne) {
-            if (!idScanne || idScanne.trim() === "" || idScanne === "undefined" || idScanne === "null") {
-                showErrorScreen("ID manquant ou invalide.");
+            if (!idScanne || idScanne.trim() === "") {
+                showErrorScreen("ID ou code QR invalide.");
                 return;
             }
 
@@ -186,7 +193,6 @@
             if (oldScript) oldScript.remove();
 
             const cleanId = idScanne.trim();
-            // Utilisation explicite de action=sortie
             const url = `${SCRIPT_URL}?action=sortie&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
 
             const script = document.createElement('script');
@@ -203,27 +209,26 @@
         window.handleScanResponse = function(response) {
             console.log("Réponse serveur :", response);
 
+            const photo = response.photo || response.photoUrl;
+
             if (response.status === "success") {
-                showSuccessScreen(response.nom, response.photoUrl, response.heure);
+                showSuccessScreen(response.nom, response.id || currentScannedId, photo);
             } else {
                 showErrorScreen(response.message || "Erreur lors de la validation.");
             }
         };
 
-        // Détection globale de tous les noms de paramètres URL possibles
+        let currentScannedId = "";
+
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const scannedId = urlParams.get('id') || 
-                              urlParams.get('code') || 
-                              urlParams.get('qr') || 
-                              urlParams.get('user') || 
-                              urlParams.get('member') || 
-                              urlParams.get('idUnique');
+            const scannedId = urlParams.get('id') || urlParams.get('code') || urlParams.get('qr');
 
-            if (scannedId && scannedId.trim() !== "") {
+            if (scannedId) {
+                currentScannedId = scannedId;
                 validerSortie(scannedId);
             } else {
-                showErrorScreen("Aucun ID trouvé dans l'URL. Veuillez le saisir ci-dessous :");
+                showErrorScreen("Aucun ID détecté.");
             }
         });
     </script>
