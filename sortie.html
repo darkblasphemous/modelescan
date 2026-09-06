@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contrôle des Sorties - ASTER</title>
     <style>
         body {
@@ -14,42 +15,50 @@
             margin: 0;
         }
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             text-align: center;
-            width: 420px;
+            width: 440px;
+            box-sizing: border-box;
         }
         .logo {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 10px;
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 15px;
         }
         h2 {
             color: #1e293b;
             font-size: 22px;
-            margin-bottom: 20px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 25px;
         }
         .avatar-container {
             margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
         }
         .avatar {
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #10b981; /* Bordure verte ou neutre selon le statut */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 4px solid #10b981; /* Contour vert élégant */
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.2);
+            background-color: #e2e8f0;
         }
-        /* Boîte d'alerte Orange pour l'enquête */
+        /* Boîte d'alerte orange exacte */
         .alert-box-orange {
             background-color: #f97316;
             color: white;
-            padding: 20px;
+            padding: 22px 20px;
             border-radius: 12px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            text-align: center;
         }
         .alert-box-orange p {
             margin: 0 0 8px 0;
@@ -57,24 +66,29 @@
             font-weight: 500;
         }
         .alert-box-orange strong {
-            font-size: 18px;
-            text-transform: uppercase;
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: lowercase; /* Garde le format du nom */
             letter-spacing: 0.5px;
         }
+        /* Groupe de boutons */
         .buttons-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             justify-content: center;
         }
         .btn {
             flex: 1;
-            padding: 12px 15px;
+            padding: 14px 10px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:active {
+            transform: scale(0.98);
         }
         .btn-primary {
             background-color: #007bff;
@@ -87,9 +101,9 @@
 </head>
 <body>
 
-    <div class="container" id="app-container">
-        <!-- Logo ASTER -->
-        <img src="URL_DE_VOTRE_LOGO" alt="Logo ASTER" class="logo">
+    <div class="container">
+        <!-- Logo officiel ASTER -->
+        <img src="https://i.ibb.co/5W84v3W/logo-aster.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
@@ -98,22 +112,24 @@
             <img id="member-avatar" src="" alt="Photo membre" class="avatar">
         </div>
 
-        <!-- Zone dynamique gérée par le script -->
+        <!-- Zone dynamique gérée par le script de la page -->
         <div id="dynamic-content">
-            <!-- Inséré dynamiquement par JavaScript selon la réponse du serveur -->
+            <!-- Injecté automatiquement par le JS -->
         </div>
     </div>
 
     <script>
-        // Exemple de fonction qui traite la réponse JSONP/JSON du serveur
-        function afficherResultatSortie(response) {
+        // Fonction appelée lors du retour de l'API Google Apps Script
+        function afficherResultat(response) {
             const avatarImg = document.getElementById('member-avatar');
             const dynamicContent = document.getElementById('dynamic-content');
 
-            // Affichage de la photo
-            avatarImg.src = response.photoUrl || 'default-avatar.png';
+            // Affichage de la photo du membre
+            if (response.photoUrl) {
+                avatarImg.src = response.photoUrl;
+            }
 
-            // Si le serveur renvoie le statut require_survey (Enquête non faite)
+            // Si l'enquête est requise (Design Orange demandé)
             if (response.status === "require_survey") {
                 dynamicContent.innerHTML = `
                     <div class="alert-box-orange">
@@ -129,22 +145,24 @@
             // Si la sortie est validée normalement
             else if (response.status === "success") {
                 dynamicContent.innerHTML = `
-                    <div style="background-color: #ef4444; color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                        <p style="margin:0 0 5px 0;">✓ SORTIE ENREGISTRÉE</p>
-                        <strong>${response.nom}</strong>
+                    <div style="background-color: #10b981; color: white; padding: 22px 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                        <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold;">✓ SORTIE ENREGISTRÉE</p>
+                        <strong style="font-size: 20px; text-transform: uppercase;">${response.nom}</strong>
                     </div>
-                    <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                    <div class="buttons-group">
+                        <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                    </div>
                 `;
             }
         }
 
         function ouvrirEnquete(idMembre) {
-            // Lien vers votre formulaire ou page d'enquête
+            // Lien vers le formulaire d'enquête
             window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform?entry.ID=" + idMembre, "_blank");
         }
 
         function nouveauScan() {
-            location.reload(); // Recharge la page pour un nouveau scan
+            location.reload();
         }
     </script>
 </body>
