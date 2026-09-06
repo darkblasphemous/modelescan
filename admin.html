@@ -37,7 +37,6 @@
             text-align: center;
         }
         
-        /* Pilules de statistiques */
         .stats-container {
             display: flex;
             gap: 10px;
@@ -66,7 +65,6 @@
         .bg-out { background-color: #ef4444; }
         .bg-inscrits { background-color: #0066ff; }
 
-        /* Carte Principale */
         .card {
             background: white;
             border-radius: 20px;
@@ -75,7 +73,6 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.04);
         }
 
-        /* Barre de Recherche */
         .search-box {
             width: 100%;
             padding: 12px 16px;
@@ -91,7 +88,6 @@
             color: #94a3b8;
         }
 
-        /* Liste Défilante */
         .member-list {
             max-height: 440px;
             overflow-y: auto;
@@ -109,7 +105,6 @@
             border-radius: 4px;
         }
 
-        /* Élément Membre */
         .member-item {
             display: flex;
             align-items: center;
@@ -147,7 +142,6 @@
             margin-top: 2px;
         }
 
-        /* Badges de Statut */
         .member-right {
             display: flex;
             flex-direction: column;
@@ -182,18 +176,15 @@
 <body>
 
     <div class="main-container">
-        <!-- Logo et Titre -->
         <img src="logo.png" alt="ASTER" class="logo">
         <h2>Liste des Inscrits</h2>
 
-        <!-- Pilules de Stats -->
         <div class="stats-container">
             <div class="stat-pill">In: <span class="badge-count bg-in" id="count-in">0</span></div>
             <div class="stat-pill">Out: <span class="badge-count bg-out" id="count-out">0</span></div>
             <div class="stat-pill">Inscrits: <span class="badge-count bg-inscrits" id="count-inscrits">0</span></div>
         </div>
 
-        <!-- Carte de recherche & liste -->
         <div class="card">
             <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
             
@@ -208,14 +199,16 @@
         let allMembers = [];
 
         function fetchMembers() {
-            fetch(SCRIPT_URL)
+            // Utilisation exacte de la requête action=getMembers
+            fetch(`${SCRIPT_URL}?action=getMembers`)
                 .then(res => res.json())
                 .then(data => {
-                    // Adaptabilité selon la structure renvoyée par le script
-                    const membersList = Array.isArray(data) ? data : (data.members || []);
-                    
-                    if (membersList.length > 0 || data.success) {
-                        allMembers = membersList;
+                    if (data.success && data.members) {
+                        allMembers = data.members;
+                        updateStats();
+                        renderList(allMembers);
+                    } else if (Array.isArray(data)) {
+                        allMembers = data;
                         updateStats();
                         renderList(allMembers);
                     } else {
@@ -223,7 +216,7 @@
                     }
                 })
                 .catch(err => {
-                    console.error("Erreur de chargement:", err);
+                    console.error("Erreur:", err);
                     document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur de chargement</p>`;
                 });
         }
@@ -292,7 +285,6 @@
             renderList(filtered);
         }
 
-        // Chargement initial + rafraîchissement toutes les 5 secondes
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
