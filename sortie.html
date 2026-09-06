@@ -1,250 +1,181 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contrôle des Sorties - ASTER</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f4f6f9">
 
-        /* Dimensions de la carte rigoureusement identiques à l'entrée */
-        .card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            max-width: 440px;
-            text-align: center;
-            box-sizing: border-box;
-        }
+  <title>Contrôle des Sorties - ASTER</title>
+  
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
-        /* Logo de la même taille et positionné à l'identique */
-        .logo {
-            width: 110px;
-            height: 110px;
-            margin: 0 auto 20px auto;
-            object-fit: contain;
-            display: block;
-        }
+  <style>
+    * {
+      box-sizing: border-box !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      width: 100%;
+      margin: 0;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f6f9;
+      text-align: center;
+      -webkit-text-size-adjust: 100%;
+    }
 
-        h2 {
-            color: #1e293b;
-            font-size: 22px;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-weight: 700;
-        }
+    .card-container {
+      max-width: 440px;
+      width: 100%;
+      margin: 10px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
 
-        /* Style de la barre de progression (chargement) */
-        .progress-bar-container {
-            width: 100%;
-            background-color: #e2e8f0;
-            border-radius: 10px;
-            height: 8px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
+    .logo-container {
+      margin: 0 auto 10px auto;
+      max-width: 140px;
+      width: 100%;
+    }
+    
+    .logo-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
 
-        .progress-bar {
-            width: 60%;
-            height: 100%;
-            background-color: #0066ff;
-            border-radius: 10px;
-            animation: pulse-bar 1.5s infinite ease-in-out;
-        }
+    h2 {
+      color: #2d3748;
+      margin: 5px 0 15px 0;
+      font-size: 1.35em;
+      font-weight: 700;
+    }
 
-        @keyframes pulse-bar {
-            0% { width: 30%; }
-            50% { width: 80%; }
-            100% { width: 30%; }
-        }
+    .scanner-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #1a202c;
+    }
 
-        .loading-box {
-            background-color: #f0f7ff;
-            border: 1px solid #d0e3ff;
-            color: #0066ff;
-            padding: 18px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 25px;
-        }
+    #reader {
+      width: 100%;
+      border: none;
+    }
 
-        /* Style de la photo du membre */
-        .member-photo {
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #00c896;
-            margin: 0 auto 20px auto;
-            display: block;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
+    #reader video {
+      object-fit: cover !important;
+      border-radius: 12px;
+    }
 
-        /* Style du bloc d'alerte orange */
-        .alert-box {
-            background-color: #f97316;
-            color: white;
-            padding: 20px 15px;
-            border-radius: 14px;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
-        }
+    .subtitle {
+      color: #718096;
+      font-size: 0.85em;
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
 
-        .alert-box p {
-            font-size: 15px;
-            font-weight: 500;
-            margin: 0 0 8px 0;
-            line-height: 1.4;
-        }
+    .status-msg {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      text-align: center;
+      display: none;
+      font-weight: bold;
+    }
 
-        .alert-box h3 {
-            font-size: 19px;
-            font-weight: 800;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .status-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
 
-        /* Style des boutons */
-        .btn-container {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .btn {
-            flex: 1;
-            background-color: #0066ff;
-            color: white;
-            text-decoration: none;
-            border: none;
-            padding: 14px 10px;
-            border-radius: 14px;
-            font-weight: bold;
-            font-size: 15px;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 102, 255, 0.2);
-            transition: background-color 0.2s, transform 0.1s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn:hover {
-            background-color: #0052cc;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-    </style>
+    .status-error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="card" id="result-container">
-        <!-- Logo ASTER -->
-        <img src="logo.png" alt="Logo ASTER" class="logo">
-        <h2>Contrôle des Sorties</h2>
-        
-        <!-- Écran de chargement initial -->
-        <div class="progress-bar-container">
-            <div class="progress-bar"></div>
-        </div>
-        <div class="loading-box">
-            Validation en cours...
-        </div>
+  <div class="card-container">
+    <div class="logo-container">
+      <img src="logo.png" alt="Logo ASTER" id="app-logo">
     </div>
 
-    <script>
-        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
-        const URL_FORMULAIRE = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=header";
+    <h2>Contrôle des Sorties</h2>
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const codeScanne = urlParams.get("id") || urlParams.get("code");
+    <div class="scanner-wrapper">
+      <div id="reader"></div>
+    </div>
 
-        const container = document.getElementById("result-container");
+    <p class="subtitle">Scannez le badge du membre pour valider la sortie</p>
 
-        if (!codeScanne) {
-            container.innerHTML = `
-                <img src="logo.png" alt="Logo ASTER" class="logo">
-                <h2>Contrôle des Sorties</h2>
-                <div class="alert-box" style="background-color: #ef4444;">
-                    <p>Erreur : Aucun identifiant (ID) fourni dans l'URL.</p>
-                </div>
-                <button class="btn" style="width: 100%;" onclick="window.location.href='index.html'">Retour</button>
-            `;
-        } else {
-            setTimeout(() => {
-                fetch(`${URL_GOOGLE_SCRIPT}?id=${encodeURIComponent(codeScanne)}&action=sortie`)
-                    .then(response => response.json())
-                    .then(data => {
-                        let photoHtml = "";
-                        if (data.photo && data.photo.trim() !== "") {
-                            photoHtml = `<img src="${data.photo}" alt="Photo de ${data.nom}" class="member-photo">`;
-                        }
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
 
-                        if (data.status === "ok") {
-                            container.innerHTML = `
-                                <img src="logo.png" alt="Logo ASTER" class="logo">
-                                <h2>Contrôle des Sorties</h2>
-                                ${photoHtml}
-                                <div style="background-color: #22c55e; color: white; padding: 20px; border-radius: 14px; margin-bottom: 20px;">
-                                    <p style="font-size: 16px; font-weight: bold; margin: 0 0 5px 0;">Sortie validée avec succès !</p>
-                                    <h3 style="margin: 0; font-size: 19px; text-transform: uppercase;">${data.nom}</h3>
-                                </div>
-                                <button class="btn" style="width: 100%;" onclick="location.reload();">Scanner un autre</button>
-                            `;
-                        } else {
-                            container.innerHTML = `
-                                <img src="logo.png" alt="Logo ASTER" class="logo">
-                                <h2>Contrôle des Sorties</h2>
-                                
-                                ${photoHtml}
-                                
-                                <div class="alert-box">
-                                    <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                                    <h3>${data.nom}</h3>
-                                </div>
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
+    const ACTION = "sortie";
+    
+    let html5QrCode = null;
+    let isProcessing = false;
 
-                                <div class="btn-container">
-                                    <a href="${URL_FORMULAIRE}" target="_blank" class="btn">
-                                        Remplir l'enquête
-                                    </a>
-                                    <button class="btn" onclick="location.reload();">
-                                        Scanner un autre
-                                    </button>
-                                </div>
-                            `;
-                        }
-                    })
-                    .catch(error => {
-                        container.innerHTML = `
-                            <img src="logo.png" alt="Logo ASTER" class="logo">
-                            <h2>Contrôle des Sorties</h2>
-                            <div class="alert-box" style="background-color: #ef4444;">
-                                <p>IMPOSSIBLE DE JOINDRE LE SERVEUR</p>
-                                <p style="font-size: 12px; margin-top: 5px;">ID : ${codeScanne}</p>
-                            </div>
-                            <button class="btn" style="width: 100%;" onclick="location.reload();">Réessayer</button>
-                        `;
-                    });
-            }, 600);
-        }
-    </script>
+    function afficherMessage(txt, error = false) {
+      const msgBox = document.getElementById("statusMsg");
+      msgBox.style.display = "block";
+      msgBox.className = "status-msg " + (error ? "status-error" : "status-success");
+      msgBox.innerText = txt;
+    }
+
+    function onScanSuccess(decodedText) {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      afficherMessage("Validation en cours...", false);
+
+      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(decodedText)}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "ok") {
+            afficherMessage(`✅ Sortie validée : ${data.name}`);
+          } else if (data.status === "enquete_requise") {
+            afficherMessage(`⚠️ ${data.message}`);
+            setTimeout(() => { window.location.href = data.url; }, 1800);
+          } else {
+            afficherMessage(`❌ ${data.message}`, true);
+          }
+        })
+        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", true))
+        .finally(() => {
+          setTimeout(() => { isProcessing = false; }, 2500);
+        });
+    }
+
+    window.addEventListener("load", () => {
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess
+      ).catch(err => {
+        afficherMessage("❌ Impossible d'accéder à la caméra", true);
+      });
+    });
+  </script>
 </body>
 </html>
