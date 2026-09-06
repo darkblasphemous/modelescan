@@ -220,8 +220,8 @@
             
             <div class="modal-details">
                 <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0284c7;">--</span></p>
-                <p>📥 Arrivée : <span id="modal-in">--:--</span></p>
-                <p>📤 Départ : <span id="modal-out">--:--</span></p>
+                <p>📥 Arrivée : <span id="modal-in" style="color: #065f46; font-weight: bold;">--:--</span></p>
+                <p>📤 Départ : <span id="modal-out" style="color: #991b1b; font-weight: bold;">--:--</span></p>
                 <p>📌 Statut : <span id="modal-status">--</span></p>
             </div>
             
@@ -283,73 +283,4 @@
                 
                 let photo = (m.photoUrl && m.photoUrl.startsWith("http")) ? m.photoUrl : 'logo.png';
                 
-                let st = (m.statut || "Inscrit").toString().trim();
-                let stLower = st.toLowerCase();
-                
-                let badgeClass = "inscrit";
-                if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
-                if (stLower.includes("sorti")) badgeClass = "sorti";
-
-                let heureArrivee = (m.heureIn && m.heureIn !== "--:--") ? m.heureIn : "";
-                
-                // Couleur dynamique de l'heure assortie au statut (Vert pour Présent, Rouge pour Sorti)
-                let heureColor = stLower.includes("sorti") ? "#991b1b" : "#065f46"; 
-                if (!stLower.includes("présent") && !stLower.includes("present") && !stLower.includes("sorti")) {
-                    heureColor = "#64748b";
-                }
-
-                let heureDisplay = heureArrivee ? `<span class="heure-text" style="color: ${heureColor}; font-weight: bold;">${heureArrivee}</span>` : ``;
-
-                return `
-                    <div class="member-item" onclick="openModal('${m.id}')">
-                        <div class="member-left">
-                            <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
-                            <div class="member-details">
-                                <div class="member-name">${nom}</div>
-                                <div class="member-id">${id}</div>
-                            </div>
-                        </div>
-                        <div class="member-right">
-                            <span class="status-badge ${badgeClass}">${st}</span>
-                            ${heureDisplay}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function openModal(memberId) {
-            const m = allMembers.find(item => item.id === memberId);
-            if (!m) return;
-
-            document.getElementById('modal-photo').src = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
-            document.getElementById('modal-name').innerText = m.nom || "Membre";
-            document.getElementById('modal-id').innerText = m.id || "";
-            document.getElementById('modal-email').innerText = m.email || "Non renseigné";
-            
-            document.getElementById('modal-in').innerText = m.heureIn || "--:--";
-            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
-            document.getElementById('modal-status').innerText = m.statut || "Inscrit";
-
-            document.getElementById('modal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-        }
-
-        function filterMembers() {
-            const query = document.getElementById("search-input").value.toLowerCase().trim();
-            const filtered = allMembers.filter(m => {
-                let nom = (m.nom || "").toLowerCase();
-                let id = (m.id || "").toLowerCase();
-                return nom.includes(query) || id.includes(query);
-            });
-            renderList(filtered);
-        }
-
-        fetchMembers();
-        setInterval(fetchMembers, 5000);
-    </script>
-</body>
-</html>
+                let st = (
