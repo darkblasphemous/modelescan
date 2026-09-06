@@ -246,12 +246,10 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Utilise la colonne Départ si le membre est sorti, sinon Arrivée
-                let rawTime = stLower.includes("sorti") ? (m.depart || m.heure) : (m.arrivee || m.heure);
-
+                // Utilise directement m.heure envoyé par l'Apps Script
                 let heureClean = "";
-                if (rawTime) {
-                    let hStr = rawTime.toString().trim();
+                if (m.heure) {
+                    let hStr = m.heure.toString().trim();
                     let match = hStr.match(/(\d{1,2}:\d{2})/);
                     if (match) {
                         heureClean = match[1];
