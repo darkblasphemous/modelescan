@@ -138,3 +138,218 @@
 
         .member-name {
             font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .member-id {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .member-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        /* Badges de statut par membre */
+        .status-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .status-badge.present { background-color: #d1fae5; color: #065f46; }
+        .status-badge.sorti { background-color: #fee2e2; color: #991b1b; }
+        .status-badge.inscrit { background-color: #e0f2fe; color: #0369a1; }
+
+        .heure-text {
+            font-size: 11px;
+        }
+
+        /* Fenêtre Modale (Pop-up détail) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; width: 90%; max-width: 400px; border-radius: 24px; padding: 25px;
+            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: scaleUp 0.2s ease;
+        }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 4px solid #38bdf8; }
+        .modal h3 { margin: 0 0 4px 0; color: #1e293b; font-size: 20px; font-weight: 800; }
+        .modal-details { text-align: left; background: #f8fafc; padding: 15px; border-radius: 16px; margin: 20px 0; font-size: 14px; color: #334155; border: 1px solid #e2e8f0; }
+        .modal-details p { margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-details span { font-weight: 700; color: #0f172a; }
+        .btn-close { width: 100%; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-close:hover { background: #0284c7; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo ASTER" onerror="this.src='https://via.placeholder.com/120'">
+    </div>
+
+    <h1>Administration</h1>
+
+    <div class="stats-container">
+        <div class="stat-badge">In: <span class="badge-in" id="count-in">0</span></div>
+        <div class="stat-badge">Out: <span class="badge-out" id="count-out">0</span></div>
+        <div class="stat-badge">Inscrits: <span class="badge-inscrits" id="count-inscrits">0</span></div>
+    </div>
+
+    <div class="main-card">
+        <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
+        
+        <div id="member-list" class="member-list">
+            <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
+        </div>
+    </div>
+
+    <div id="modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <img id="modal-photo" src="logo.png" alt="Photo" onerror="this.src='logo.png'">
+            <h3 id="modal-name">Nom Membre</h3>
+            <div id="modal-id" style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px;">ID</div>
+            
+            <div class="modal-details">
+                <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0284c7;">--</span></p>
+                <p>📥 Arrivée : <span id="modal-in">--:--</span></p>
+                <p>📤 Départ : <span id="modal-out">--:--</span></p>
+                <p>📌 Statut : <span id="modal-status">--</span></p>
+            </div>
+            
+            <button class="btn-close" onclick="closeModal()">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        // Remplace par l'URL de déploiement de ton script Google Apps Script
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
+        let allMembers = [];
+
+        function fetchMembers() {
+            const oldScript = document.getElementById('jsonp-script');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-script';
+            script.src = `${SCRIPT_URL}?action=getmembers&callback=handleResponse&_=` + new Date().getTime();
+            
+            document.head.appendChild(script);
+        }
+
+        window.handleResponse = function(data) {
+            if (data && data.status === "success" && data.members && data.members.length > 0) {
+                allMembers = data.members;
+                updateStats();
+                filterMembers();
+            } else {
+                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
+            }
+        };
+
+        function updateStats() {
+            let inCount = 0;
+            let outCount = 0;
+
+            allMembers.forEach(m => {
+                let st = (m.statut || "").toString().trim().toLowerCase();
+                if (st.includes("présent") || st.includes("present")) inCount++;
+                if (st.includes("sorti")) outCount++;
+            });
+
+            document.getElementById("count-in").innerText = inCount;
+            document.getElementById("count-out").innerText = outCount;
+            document.getElementById("count-inscrits").innerText = allMembers.length;
+        }
+
+        function renderList(members) {
+            const container = document.getElementById("member-list");
+            if (members.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: #94a3b8; padding: 15px;">Aucun résultat</p>`;
+                return;
+            }
+
+            container.innerHTML = members.map(m => {
+                let nom = m.nom || "Membre";
+                let id = m.id || "";
+                
+                let photo = (m.photoUrl && m.photoUrl.startsWith("http")) ? m.photoUrl : 'logo.png';
+                
+                let st = (m.statut || "Inscrit").toString().trim();
+                let stLower = st.toLowerCase();
+                
+                let badgeClass = "inscrit";
+                if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
+                if (stLower.includes("sorti")) badgeClass = "sorti";
+
+                let heureArrivee = (m.heureIn && m.heureIn !== "--:--") ? m.heureIn : "";
+                
+                // Couleur dynamique de l'heure assortie au statut (Vert pour Présent, Rouge pour Sorti)
+                let heureColor = stLower.includes("sorti") ? "#991b1b" : "#065f46"; 
+                if (!stLower.includes("présent") && !stLower.includes("present") && !stLower.includes("sorti")) {
+                    heureColor = "#64748b";
+                }
+
+                let heureDisplay = heureArrivee ? `<span class="heure-text" style="color: ${heureColor}; font-weight: bold;">${heureArrivee}</span>` : ``;
+
+                return `
+                    <div class="member-item" onclick="openModal('${m.id}')">
+                        <div class="member-left">
+                            <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
+                            <div class="member-details">
+                                <div class="member-name">${nom}</div>
+                                <div class="member-id">${id}</div>
+                            </div>
+                        </div>
+                        <div class="member-right">
+                            <span class="status-badge ${badgeClass}">${st}</span>
+                            ${heureDisplay}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openModal(memberId) {
+            const m = allMembers.find(item => item.id === memberId);
+            if (!m) return;
+
+            document.getElementById('modal-photo').src = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
+            document.getElementById('modal-name').innerText = m.nom || "Membre";
+            document.getElementById('modal-id').innerText = m.id || "";
+            document.getElementById('modal-email').innerText = m.email || "Non renseigné";
+            
+            document.getElementById('modal-in').innerText = m.heureIn || "--:--";
+            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
+            document.getElementById('modal-status').innerText = m.statut || "Inscrit";
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function filterMembers() {
+            const query = document.getElementById("search-input").value.toLowerCase().trim();
+            const filtered = allMembers.filter(m => {
+                let nom = (m.nom || "").toLowerCase();
+                let id = (m.id || "").toLowerCase();
+                return nom.includes(query) || id.includes(query);
+            });
+            renderList(filtered);
+        }
+
+        fetchMembers();
+        setInterval(fetchMembers, 5000);
+    </script>
+</body>
+</html>
