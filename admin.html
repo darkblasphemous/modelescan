@@ -2,9 +2,14 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Administration - ASTER</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#f4f6f9">
 
+  <title>Administration - ASTER</title>
+  
   <style>
     * {
       box-sizing: border-box !important;
@@ -18,21 +23,12 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f4f6f9;
       text-align: center;
-    }
-
-    .card-container {
-      max-width: 520px;
-      width: 100%;
-      margin: 20px auto;
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 25px 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      -webkit-text-size-adjust: 100%;
     }
 
     .logo-container {
-      margin: 0 auto 15px auto;
-      max-width: 110px;
+      margin: 10px auto 15px auto;
+      max-width: 180px;
       width: 100%;
     }
     
@@ -44,265 +40,288 @@
     }
 
     h2 {
-      color: #2d3748;
-      margin: 5px 0 15px 0;
-      font-size: 1.35em;
-      font-weight: 700;
+      color: #333;
+      margin: 10px 0 15px 0;
+      font-size: 1.4em;
     }
 
-    .counters-container {
+    .stats-container {
       display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 20px;
       flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      max-width: 480px;
+      margin: 0 auto 12px auto;
+      font-size: 0.9em;
+      font-weight: bold;
+      color: #444;
     }
 
-    .counter-badge {
+    .stat-badge-wrapper {
       display: inline-flex;
       align-items: center;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      padding: 6px 10px;
+      gap: 4px;
+      background: #fff;
+      padding: 6px 12px;
       border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.85em;
-      color: #4a5568;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
-    .counter-badge span {
-      margin-left: 6px;
-      padding: 2px 8px;
-      border-radius: 12px;
-      color: white;
-      font-size: 0.9em;
-    }
-
-    .badge-in span { background-color: #17a2b8; }
-    .badge-out span { background-color: #e53e3e; }
-    .badge-total span { background-color: #007bff; }
-
-    .search-box {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #cbd5e0;
-      border-radius: 12px;
-      font-size: 0.95em;
-      outline: none;
-      margin-bottom: 15px;
-      transition: border-color 0.2s;
-    }
-
-    .search-box:focus {
-      border-color: #17a2b8;
-      box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.15);
-    }
-
-    .members-list {
-      max-height: 400px;
-      overflow-y: auto;
+    .members-container-card {
       text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto 20px auto;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
     .member-item {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+      font-size: 0.85em;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 12px;
-      background: #f8fafc;
-      border-radius: 12px;
-      border: 1px solid #edf2f7;
     }
 
-    .member-left {
+    .member-item:last-child {
+      border-bottom: none;
+    }
+
+    .user-info {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .member-avatar {
-      width: 42px;
-      height: 42px;
+    .mini-thumb {
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid #e2e8f0;
-      background-color: #edf2f7;
+      border: 1px solid #ddd;
+      background-color: #eee;
+      flex-shrink: 0;
     }
 
-    .member-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .member-name {
+    .badge {
       font-weight: bold;
-      color: #2d3748;
-      font-size: 0.9em;
-      text-transform: uppercase;
-    }
-
-    .member-id {
-      font-size: 0.73em;
-      color: #718096;
-    }
-
-    .member-right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 3px;
-    }
-
-    .status-pill {
-      font-size: 0.72em;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      color: white;
-    }
-
-    .status-present { background-color: #17a2b8; }
-    .status-out { background-color: #e53e3e; }
-    .status-none { background-color: #a0aec0; }
-
-    .time-info {
-      font-size: 0.7em;
-      color: #718096;
-      font-weight: 500;
-    }
-
-    .msg-state {
-      padding: 20px;
-      color: #718096;
-      font-size: 0.95em;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      display: inline-block;
       text-align: center;
     }
 
-    .msg-error {
-      color: #e53e3e;
+    .badge.present {
+      color: #00b894;
+      background-color: #e6f9f5;
+    }
+
+    .badge.sorti {
+      color: #d63031;
+      background-color: #ffecec;
+    }
+
+    .badge.attente {
+      color: #b2bec3;
+      background-color: #f1f2f6;
+    }
+
+    .badge-count {
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8em;
+    }
+
+    .badge-count.in {
+      background-color: #00b894;
+    }
+
+    .badge-count.out {
+      background-color: #d63031;
+    }
+
+    .badge-count.total {
+      background-color: #0984e3;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 0.9em;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #00b894;
+    }
+
+    .members-scroll-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .empty-msg {
+      color: #aaa;
+      text-align: center;
+      margin: 10px 0;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
 
-  <div class="card-container">
-    <div class="logo-container">
-      <img src="logo.png" alt="Logo ASTER" id="app-logo">
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo ASTER" id="app-logo">
+  </div>
+
+  <h2>Tableau de Bord - Administration</h2>
+
+  <div class="stats-container">
+    <div class="stat-badge-wrapper">
+      <span>In:</span> <span class="badge-count in" id="inCount">0</span>
     </div>
-
-    <h2>Liste des Inscrits</h2>
-
-    <div class="counters-container">
-      <div class="counter-badge badge-in">In: <span id="countIn">0</span></div>
-      <div class="counter-badge badge-out">Out: <span id="countOut">0</span></div>
-      <div class="counter-badge badge-total">Inscrits: <span id="countTotal">0</span></div>
+    <div class="stat-badge-wrapper">
+      <span>Out:</span> <span class="badge-count out" id="outCount">0</span>
     </div>
-
-    <input type="text" id="searchInput" class="search-box" placeholder="Rechercher un membre par nom ou ID..." onkeyup="filtrerMembres()">
-
-    <div class="members-list" id="membersList">
-      <div class="msg-state">Chargement des inscrits...</div>
+    <div class="stat-badge-wrapper">
+      <span>Inscrits:</span> <span class="badge-count total" id="totalCount">0</span>
+    </div>
+  </div>
+  
+  <div class="members-container-card">
+    <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un membre par nom ou ID..." oninput="filtrerMembres()">
+    <div class="members-scroll-list" id="membersList">
+      <p class="empty-msg">Chargement des membres...</p>
     </div>
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
-    
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     let tousLesMembres = [];
 
-    window.addEventListener("load", () => {
-      chargerAdminData();
-    });
-
-    function chargerAdminData() {
-      fetch(`${SCRIPT_URL}?action=admin_list`)
-        .then(res => {
-          if (!res.ok) throw new Error("Erreur réseau");
-          return res.json();
-        })
-        .then(data => {
-          if (data.status === "ok") {
-            tousLesMembres = data.membres || [];
-            mettreAJourCompteurs(tousLesMembres);
-            afficherMembres(tousLesMembres);
-          } else {
-            document.getElementById("membersList").innerHTML = `<div class="msg-state msg-error">Échec du chargement des inscrits.</div>`;
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("membersList").innerHTML = `<div class="msg-state msg-error">Impossible de joindre le serveur.</div>`;
-        });
-    }
-
-    function mettreAJourCompteurs(membres) {
-      let nbIn = membres.filter(m => m.statut === "Présent").length;
-      let nbOut = membres.filter(m => m.statut === "Sorti").length;
-      let nbTotal = membres.length;
-
-      document.getElementById("countIn").innerText = nbIn;
-      document.getElementById("countOut").innerText = nbOut;
-      document.getElementById("countTotal").innerText = nbTotal;
-    }
-
-    function afficherMembres(membres) {
-      const listContainer = document.getElementById("membersList");
+    function chargerMembresJSONP() {
+      const callbackName = "handleMembersResponse_" + Math.floor(Math.random() * 100000);
       
-      if (membres.length === 0) {
-        listContainer.innerHTML = `<div class="msg-state">Aucun membre trouvé.</div>`;
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        const script = document.getElementById(callbackName);
+        if (script) script.remove();
+
+        if (data && data.success && data.members) {
+          tousLesMembres = data.members;
+          
+          document.getElementById("totalCount").innerText = data.total || tousLesMembres.length;
+
+          const nbIn = tousLesMembres.filter(m => m.statut === "Présent").length;
+          const nbOut = tousLesMembres.filter(m => m.statut === "Sorti").length;
+
+          document.getElementById("inCount").innerText = nbIn;
+          document.getElementById("outCount").innerText = nbOut;
+
+          afficherMembres(tousLesMembres);
+        } else {
+          document.getElementById("membersList").innerHTML = `<p class="empty-msg" style="color:red;">Erreur: ${data.error || 'Aucun membre trouvé'}</p>`;
+        }
+      };
+
+      const scriptTag = document.createElement("script");
+      scriptTag.id = callbackName;
+      scriptTag.src = `${SCRIPT_URL}?action=getMembers&_=${new Date().getTime()}&callback=${callbackName}`;
+      
+      scriptTag.onerror = function() {
+        delete window[callbackName];
+        scriptTag.remove();
+        document.getElementById("membersList").innerHTML = '<p class="empty-msg" style="color:red;">Échec du chargement des inscrits.</p>';
+      };
+
+      document.body.appendChild(scriptTag);
+    }
+
+    function formaterHeure(dateStr) {
+      if (!dateStr) return '';
+      
+      // Si la chaîne contient un 'T' (ex: 2026-09-05T14:30:00.000Z ou similaire)
+      if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'Europe/Paris'
+          });
+        }
+      }
+
+      // Extraction directe par REGEX si le format contient HH:MM:SS
+      const match = String(dateStr).match(/(\d{2}):(\d{2})/);
+      if (match) {
+        return `${match[1]}:${match[2]}`;
+      }
+
+      return dateStr;
+    }
+
+    function afficherMembres(liste) {
+      const container = document.getElementById("membersList");
+      if (liste.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Aucun résultat trouvé.</p>';
         return;
       }
 
-      let html = "";
-      membres.forEach(m => {
-        let statutClass = "status-none";
-        let statutTexte = m.statut || "Inscrit";
-        if (m.statut === "Présent") statutClass = "status-present";
-        else if (m.statut === "Sorti") statutClass = "status-out";
-        else if (m.statut === "Non scanné") statutTexte = "Inscrit";
+      container.innerHTML = liste.map(m => {
+        const photo = (m.photoUrl && m.photoUrl.length > 5) ? m.photoUrl : 'https://via.placeholder.com/36?text=?';
+        
+        let badgeClass = "attente";
+        let badgeText = m.statut || 'Inscrit';
+        if (m.statut === "Présent") badgeClass = "present";
+        if (m.statut === "Sorti") badgeClass = "sorti";
 
-        let timeHtml = "";
-        if (m.statut === "Présent" && m.arrivee) {
-          timeHtml = `<span class="time-info">Arrivée : ${m.arrivee}</span>`;
-        } else if (m.statut === "Sorti" && m.depart) {
-          timeHtml = `<span class="time-info">Départ : ${m.depart}</span>`;
-        }
+        const heurePropre = formaterHeure(m.heure);
 
-        let photoUrl = m.photo && m.photo.startsWith("http") ? m.photo : "https://via.placeholder.com/150?text=?";
-
-        html += `
+        return `
           <div class="member-item">
-            <div class="member-left">
-              <img src="${photoUrl}" alt="Photo" class="member-avatar" onerror="this.src='https://via.placeholder.com/150?text=?'">
-              <div class="member-info">
-                <span class="member-name">${m.name || "Inconnu"}</span>
-                <span class="member-id">${m.id || ""}</span>
+            <div class="user-info">
+              <img class="mini-thumb" src="${photo}" alt="Avatar">
+              <div>
+                <strong style="color:#333; font-size:0.95em;">${m.nom}</strong>
+                <div style="color:#777; font-size:0.8em;">${m.id}</div>
               </div>
             </div>
-            <div class="member-right">
-              <span class="status-pill ${statutClass}">${statutTexte}</span>
-              ${timeHtml}
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="badge ${badgeClass}">${badgeText}</span>
+              <span style="font-size: 0.7em; color: #888; white-space: nowrap;">${heurePropre}</span>
             </div>
           </div>
         `;
-      });
-
-      listContainer.innerHTML = html;
+      }).join('');
     }
 
     function filtrerMembres() {
-      const query = document.getElementById("searchInput").value.toLowerCase();
-      const filtres = tousLesMembres.filter(m => {
-        const nom = (m.name || "").toLowerCase();
-        const id = (m.id || "").toLowerCase();
-        return nom.includes(query) || id.includes(query);
-      });
-      afficherMembres(filtres);
+      const recherche = document.getElementById("searchInput").value.toLowerCase();
+      const resultats = tousLesMembres.filter(m => 
+        m.nom.toLowerCase().includes(recherche) || m.id.toLowerCase().includes(recherche)
+      );
+      afficherMembres(resultats);
     }
+
+    setInterval(() => {
+      chargerMembresJSONP();
+    }, 5000);
+
+    chargerMembresJSONP();
   </script>
 </body>
 </html>
