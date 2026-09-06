@@ -147,7 +147,6 @@
     </div>
 
     <script>
-        // Variable globale pour stocker l'ID du membre récupéré
         let currentIdMembre = "";
 
         window.onload = function() {
@@ -155,6 +154,7 @@
             const codeMembre = urlParams.get('code') || urlParams.get('id');
 
             if (codeMembre) {
+                currentIdMembre = codeMembre; // Sauvegarde immédiate depuis l'URL
                 appelerAPI(codeMembre);
             }
         };
@@ -177,8 +177,8 @@
             const dynamicContent = document.getElementById('dynamic-content');
 
             if (response) {
-                // Sauvegarde de l'ID globalement (selon le retour de ton script Apps Script)
-                currentIdMembre = response.id || new URLSearchParams(window.location.search).get('code') || "";
+                // Récupération élargie de l'ID selon ce que renvoie l'API
+                currentIdMembre = response.id || response.memberId || response.code || currentIdMembre || new URLSearchParams(window.location.search).get('code') || "";
 
                 if (response.photoUrl) {
                     avatarImg.src = response.photoUrl;
@@ -221,13 +221,12 @@
         }
 
         function ouvrirEnquete() {
-            // Utilise l'ID stocké globalement ou le récupère de l'URL en secours
+            // Sécurité ultime pour récupérer l'ID si vide
             if (!currentIdMembre) {
                 const urlParams = new URLSearchParams(window.location.search);
                 currentIdMembre = urlParams.get('code') || urlParams.get('id') || '';
             }
 
-            // URL du formulaire Google Forms avec ton entry.648947853 injecté proprement
             const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(currentIdMembre);
             window.open(urlFormulaire, "_blank");
         }
