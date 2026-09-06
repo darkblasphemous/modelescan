@@ -1,181 +1,86 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#f4f6f9">
-
-  <title>Contrôle des Sorties - ASTER</title>
-  
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <style>
-    * {
-      box-sizing: border-box !important;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    html, body {
-      width: 100%;
-      margin: 0;
-      padding: 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f6f9;
-      text-align: center;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    .card-container {
-      max-width: 440px;
-      width: 100%;
-      margin: 10px auto;
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 24px 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    }
-
-    .logo-container {
-      margin: 0 auto 10px auto;
-      max-width: 140px;
-      width: 100%;
-    }
-    
-    .logo-container img {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-
-    h2 {
-      color: #2d3748;
-      margin: 5px 0 15px 0;
-      font-size: 1.35em;
-      font-weight: 700;
-    }
-
-    .scanner-wrapper {
-      position: relative;
-      width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #1a202c;
-    }
-
-    #reader {
-      width: 100%;
-      border: none;
-    }
-
-    #reader video {
-      object-fit: cover !important;
-      border-radius: 12px;
-    }
-
-    .subtitle {
-      color: #718096;
-      font-size: 0.85em;
-      margin-top: 15px;
-      margin-bottom: 0;
-    }
-
-    .status-msg {
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.9em;
-      text-align: center;
-      display: none;
-      font-weight: bold;
-    }
-
-    .status-success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .status-error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle des Sorties - ASTER</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; }
+        .logo { width: 110px; height: 110px; margin: 0 auto 15px auto; object-fit: contain; display: block; }
+        h2 { color: #1e293b; font-size: 22px; margin: 0 0 20px 0; font-weight: 700; }
+        .member-photo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #00c896; margin: 0 auto 20px auto; display: block; }
+        .status-box { padding: 20px 15px; border-radius: 14px; color: white; margin-bottom: 20px; }
+        .status-box.green { background-color: #00b4d8; }
+        .status-box.orange { background-color: #f97316; }
+        .status-box.red { background-color: #ef4444; }
+        .status-box p { margin: 0 0 5px 0; font-size: 15px; font-weight: bold; }
+        .status-box h3 { margin: 0; font-size: 20px; text-transform: uppercase; font-weight: 800; }
+        .btn-container { display: flex; gap: 10px; }
+        .btn { flex: 1; background-color: #0066ff; color: white; border: none; padding: 14px 10px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+    </style>
 </head>
 <body>
-
-  <div class="card-container">
-    <div class="logo-container">
-      <img src="logo.png" alt="Logo ASTER" id="app-logo">
+    <div class="card" id="card-content">
+        <img src="logo.png" class="logo">
+        <h2>Contrôle des Sorties</h2>
+        <p>Validation en cours...</p>
     </div>
 
-    <h2>Contrôle des Sorties</h2>
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('id') || urlParams.get('code');
+        const container = document.getElementById("card-content");
 
-    <div class="scanner-wrapper">
-      <div id="reader"></div>
-    </div>
-
-    <p class="subtitle">Scannez le badge du membre pour valider la sortie</p>
-
-    <div id="statusMsg" class="status-msg"></div>
-  </div>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
-    const ACTION = "sortie";
-    
-    let html5QrCode = null;
-    let isProcessing = false;
-
-    function afficherMessage(txt, error = false) {
-      const msgBox = document.getElementById("statusMsg");
-      msgBox.style.display = "block";
-      msgBox.className = "status-msg " + (error ? "status-error" : "status-success");
-      msgBox.innerText = txt;
-    }
-
-    function onScanSuccess(decodedText) {
-      if (isProcessing) return;
-      isProcessing = true;
-
-      afficherMessage("Validation en cours...", false);
-
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(decodedText)}`;
-
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "ok") {
-            afficherMessage(`✅ Sortie validée : ${data.name}`);
-          } else if (data.status === "enquete_requise") {
-            afficherMessage(`⚠️ ${data.message}`);
-            setTimeout(() => { window.location.href = data.url; }, 1800);
-          } else {
-            afficherMessage(`❌ ${data.message}`, true);
-          }
-        })
-        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", true))
-        .finally(() => {
-          setTimeout(() => { isProcessing = false; }, 2500);
-        });
-    }
-
-    window.addEventListener("load", () => {
-      html5QrCode = new Html5Qrcode("reader");
-      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onScanSuccess
-      ).catch(err => {
-        afficherMessage("❌ Impossible d'accéder à la caméra", true);
-      });
-    });
-  </script>
+        if (!code) {
+            container.innerHTML = `
+                <img src="logo.png" class="logo">
+                <h2>Contrôle des Sorties</h2>
+                <div class="status-box red"><p>⚠️ Erreur : Identifiant manquant</p></div>
+            `;
+        } else {
+            fetch(`${SCRIPT_URL}?action=sortie&code=${encodeURIComponent(code)}`)
+                .then(res => res.json())
+                .then(data => {
+                    let photoHtml = data.photo ? `<img src="${data.photo}" class="member-photo">` : '';
+                    if (data.status === "ok") {
+                        container.innerHTML = `
+                            <img src="logo.png" class="logo">
+                            <h2>Contrôle des Sorties</h2>
+                            ${photoHtml}
+                            <div class="status-box green">
+                                <p>✓ SORTIE VALIDÉE</p>
+                                <h3>${data.name}</h3>
+                                <div style="font-size:12px; margin-top:5px;">ID : ${data.id}</div>
+                            </div>
+                            <button class="btn" style="width:100%" onclick="location.reload();">Scanner un autre</button>
+                        `;
+                    } else if (data.status === "require_survey") {
+                        container.innerHTML = `
+                            <img src="logo.png" class="logo">
+                            <h2>Contrôle des Sorties</h2>
+                            ${photoHtml}
+                            <div class="status-box orange">
+                                <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                                <h3>${data.name}</h3>
+                            </div>
+                            <div class="btn-container">
+                                <a href="${data.surveyUrl}" class="btn" target="_blank">Remplir l'enquête</a>
+                                <button class="btn" onclick="location.reload();">Scanner un autre</button>
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = `
+                            <img src="logo.png" class="logo">
+                            <h2>Contrôle des Sorties</h2>
+                            <div class="status-box red"><p>${data.message}</p></div>
+                            <button class="btn" style="width:100%" onclick="location.reload();">Réessayer</button>
+                        `;
+                    }
+                });
+        }
+    </script>
 </body>
 </html>
