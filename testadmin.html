@@ -195,25 +195,23 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec"; 
         let allMembers = [];
 
-        function fetchMembers() {
-            const oldScript = document.getElementById('jsonp-script');
-            if (oldScript) oldScript.remove();
-
-            const script = document.createElement('script');
-            script.id = 'jsonp-script';
-            script.src = `${SCRIPT_URL}?action=getmembers&callback=handleResponse&_=` + new Date().getTime();
-            document.head.appendChild(script);
-        }
-
-        window.handleResponse = function(data) {
-            if (data && data.status === "success" && data.members && data.members.length > 0) {
-                allMembers = data.members;
-                updateStats();
-                filterMembers();
-            } else {
-                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
+        async function fetchMembers() {
+            try {
+                let response = await fetch(`${SCRIPT_URL}?action=getmembers&_=${new Date().getTime()}`);
+                let data = await response.json();
+                
+                if (data && data.status === "success" && data.members && data.members.length > 0) {
+                    allMembers = data.members;
+                    updateStats();
+                    filterMembers();
+                } else {
+                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
+                }
+            } catch (error) {
+                console.error("Erreur de chargement:", error);
+                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur de connexion au serveur.</p>`;
             }
-        };
+        }
 
         function updateStats() {
             let inCount = 0;
@@ -248,7 +246,6 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Extraction souple et sécurisée acceptant 1 ou 2 chiffres pour les heures
                 let heureClean = "";
                 if (m.heure) {
                     let hStr = m.heure.toString().trim();
