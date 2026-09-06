@@ -1,12 +1,18 @@
-<!-- ========================================== -->
-<!-- DEBUT DU FICHIER : admin.html              -->
-<!-- ========================================== -->
+<!-- ============================================================================ -->
+<!-- PROJET : APPLICATION D'ADMINISTRATION ET DE SUIVI DES MEMBRES (ASTER)       -->
+<!-- FICHIER : admin.html                                                        -->
+<!-- ============================================================================ -->
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration - ASTER</title>
+
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION STYLES (CSS)                                         -->
+    <!-- ======================================================================== -->
     <style>
         * { box-sizing: border-box; }
         body {
@@ -40,7 +46,7 @@
             text-align: center;
         }
         
-        /* Stats Header */
+        /* Badges de comptage */
         .stats-container {
             display: flex;
             gap: 10px;
@@ -69,7 +75,7 @@
         .bg-out { background-color: #ef4444; }
         .bg-inscrits { background-color: #0066ff; }
 
-        /* Card Container */
+        /* Carte principale de recherche et liste */
         .card {
             background: white;
             border-radius: 20px;
@@ -89,22 +95,12 @@
             color: #334155;
             background-color: #fff;
         }
-        .search-box::placeholder {
-            color: #94a3b8;
-        }
 
         .member-list {
             max-height: 440px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-        }
-        .member-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .member-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
         }
 
         .member-item {
@@ -128,6 +124,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
         }
         .member-details {
             display: flex;
@@ -155,18 +152,9 @@
             font-size: 12px;
             font-weight: 700;
         }
-        .status-badge.present {
-            background-color: #e6f9f4;
-            color: #00c896;
-        }
-        .status-badge.sorti {
-            background-color: #feefef;
-            color: #ef4444;
-        }
-        .status-badge.inscrit {
-            background-color: #f1f5f9;
-            color: #94a3b8;
-        }
+        .status-badge.present { background-color: #e6f9f4; color: #00c896; }
+        .status-badge.sorti { background-color: #feefef; color: #ef4444; }
+        .status-badge.inscrit { background-color: #f1f5f9; color: #94a3b8; }
         .heure-text {
             font-size: 9px;
             color: #94a3b8;
@@ -174,19 +162,27 @@
             font-weight: 500;
         }
     </style>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION STYLES (CSS)                                           -->
+    <!-- ======================================================================== -->
 </head>
 <body>
 
+    <!-- ======================================================================== -->
+    <!-- DEBUT DU CONTENU HTML (INTERFACE UTILISATEUR)                           -->
+    <!-- ======================================================================== -->
     <div class="main-container">
         <img src="logo.png" alt="ASTER" class="logo">
         <h2>Administration</h2>
 
+        <!-- Statistiques d'effectifs -->
         <div class="stats-container">
             <div class="stat-pill">In: <span class="badge-count bg-in" id="count-in">0</span></div>
             <div class="stat-pill">Out: <span class="badge-count bg-out" id="count-out">0</span></div>
             <div class="stat-pill">Inscrits: <span class="badge-count bg-inscrits" id="count-inscrits">0</span></div>
         </div>
 
+        <!-- Bloc de recherche et conteneur de la liste -->
         <div class="card">
             <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
             
@@ -195,38 +191,55 @@
             </div>
         </div>
     </div>
+    <!-- ======================================================================== -->
+    <!-- FIN DU CONTENU HTML                                                      -->
+    <!-- ======================================================================== -->
 
+
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION SCRIPTS (JAVASCRIPT)                                 -->
+    <!-- ======================================================================== -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Récupération dynamique des membres via JSONP
+        // ----------------------------------------------------------------------
         function fetchMembers() {
-            fetch(`${SCRIPT_URL}?action=getMembers`)
-                .then(res => res.json())
-                .then(data => {
-                    const list = data.members || (Array.isArray(data) ? data : []);
-                    if (list.length > 0) {
-                        allMembers = list;
-                        updateStats();
-                        renderList(allMembers);
-                    } else {
-                        document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
-                    }
-                })
-                .catch(err => {
-                    console.error("Erreur:", err);
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur lors du chargement.</p>`;
-                });
+            const oldScript = document.getElementById('jsonp-script');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-script';
+            script.src = `${SCRIPT_URL}?action=getMembers&callback=handleResponse&_=` + new Date().getTime();
+            document.body.appendChild(script);
         }
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Traitement de la réponse retournée par Google Apps Script
+        // ----------------------------------------------------------------------
+        window.handleResponse = function(data) {
+            if (data && data.members && data.members.length > 0) {
+                allMembers = data.members;
+                updateStats();
+                renderList(allMembers);
+            } else {
+                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
+            }
+        };
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Mise à jour des compteurs (In, Out, Inscrits)
+        // ----------------------------------------------------------------------
         function updateStats() {
             let inCount = 0;
             let outCount = 0;
 
             allMembers.forEach(m => {
                 let st = (m.statut || "").toString().trim().toLowerCase();
-                if (st === "présent" || st === "present") inCount++;
-                if (st === "sorti") outCount++;
+                if (st.includes("présent") || st.includes("present")) inCount++;
+                if (st.includes("sorti")) outCount++;
             });
 
             document.getElementById("count-in").innerText = inCount;
@@ -234,6 +247,9 @@
             document.getElementById("count-inscrits").innerText = allMembers.length;
         }
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Affichage HTML de la liste des membres
+        // ----------------------------------------------------------------------
         function renderList(members) {
             const container = document.getElementById("member-list");
             if (members.length === 0) {
@@ -242,18 +258,17 @@
             }
 
             container.innerHTML = members.map(m => {
-                let nom = m.nom || "Inconnu";
+                let nom = m.nom || "Membre";
                 let id = m.id || "";
                 
-                // Vérification de la présence de la photo renvoyée par le script Google
-                let photo = (m.photoUrl && m.photoUrl.trim() !== "") ? m.photoUrl : 'logo.png';
+                let photo = (m.photoUrl && m.photoUrl.startsWith("http")) ? m.photoUrl : 'logo.png';
                 
                 let st = (m.statut || "Inscrit").toString().trim();
                 let stLower = st.toLowerCase();
                 
                 let badgeClass = "inscrit";
-                if (stLower === "présent" || stLower === "present") badgeClass = "present";
-                if (stLower === "sorti") badgeClass = "sorti";
+                if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
+                if (stLower.includes("sorti")) badgeClass = "sorti";
 
                 let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
 
@@ -275,6 +290,9 @@
             }).join('');
         }
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Filtrage dynamique lors de la recherche
+        // ----------------------------------------------------------------------
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
             const filtered = allMembers.filter(m => {
@@ -285,11 +303,17 @@
             renderList(filtered);
         }
 
+        // Lancement immédiat et boucle de rafraîchissement toutes les 5 secondes
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION SCRIPTS                                                -->
+    <!-- ======================================================================== -->
+
 </body>
 </html>
-<!-- ========================================== -->
-<!-- FIN DU FICHIER : admin.html                -->
-<!-- ========================================== -->
+
+<!-- ============================================================================ -->
+<!-- FIN DU FICHIER : admin.html                                                 -->
+<!-- ============================================================================ -->
