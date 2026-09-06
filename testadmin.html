@@ -192,7 +192,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec"; // Garde ton URL exacte
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec"; 
         let allMembers = [];
 
         function fetchMembers() {
@@ -248,8 +248,17 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Affichage de l'heure si elle existe
-                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
+                // SÉCURITÉ ANTI- "Sat D" : On s'assure que l'heure ressemble bien à un format horaire (ex: contient un chiffre ou un ':' et ne contient pas de texte aberrant)
+                let heureValide = "";
+                if (m.heure && typeof m.heure === "string") {
+                    let hClean = m.heure.trim();
+                    // Vérifie que ce n'est pas un résidu de texte du genre "Sat" et qu'il y a au moins un chiffre ou un séparateur d'heure
+                    if (!hClean.toLowerCase().includes("sat") && (hClean.includes(":") || /\d/.test(hClean))) {
+                        heureValide = hClean;
+                    }
+                }
+
+                let heureDisplay = heureValide ? `<span class="heure-text">${heureValide}</span>` : '';
 
                 return `
                     <div class="member-item">
