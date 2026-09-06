@@ -126,17 +126,17 @@
 <body>
 
     <div class="container">
-        <!-- Logo intégré -->
+        <!-- Utilisation directe de logo.png -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- Avatar du membre -->
+        <!-- Avatar avec une image neutre sécurisée -->
         <div class="avatar-container">
-            <img id="member-avatar" src="" alt="" class="avatar">
+            <img id="member-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3C/svg%3E" alt="" class="avatar">
         </div>
 
-        <!-- Zone dynamique -->
+        <!-- Zone dynamique gérée par le script -->
         <div id="dynamic-content">
             <div class="alert-box-success">
                 <p>✓ EN ATTENTE DE SCAN</p>
@@ -160,7 +160,7 @@
         };
 
         function appelerAPI(code) {
-            // URL de ton déploiement Apps Script intégrée directement
+            // URL de déploiement Apps Script intégrée
             const urlAppsScript = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec?action=sortie&code=" + encodeURIComponent(code);
 
             fetch(urlAppsScript)
@@ -217,6 +217,7 @@
         }
 
         function ouvrirEnquete(idMembre) {
+            // URL du formulaire d'enquête Google Forms intégrée avec passage direct de l'ID en paramètre si besoin
             const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=header";
             window.open(urlFormulaire, "_blank");
         }
