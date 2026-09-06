@@ -147,15 +147,15 @@
     </div>
 
     <script>
-        let currentIdMembre = "";
+        // Récupération immédiate et prioritaire de l'ID depuis l'URL de la page (ex: ?code=123 ou ?id=123)
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentIdMembre = urlParams.get('code') || urlParams.get('id') || "";
 
         window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const codeMembre = urlParams.get('code') || urlParams.get('id');
-
-            if (codeMembre) {
-                currentIdMembre = codeMembre; // Sauvegarde immédiate depuis l'URL
-                appelerAPI(codeMembre);
+            if (currentIdMembre) {
+                appelerAPI(currentIdMembre);
+            } else {
+                console.warn("Aucun identifiant trouvé dans l'URL !");
             }
         };
 
@@ -177,8 +177,10 @@
             const dynamicContent = document.getElementById('dynamic-content');
 
             if (response) {
-                // Récupération élargie de l'ID selon ce que renvoie l'API
-                currentIdMembre = response.id || response.memberId || response.code || currentIdMembre || new URLSearchParams(window.location.search).get('code') || "";
+                // Si l'API renvoie un ID, on le met à jour, sinon on garde celui de l'URL
+                if (response.id || response.memberId || response.code) {
+                    currentIdMembre = response.id || response.memberId || response.code;
+                }
 
                 if (response.photoUrl) {
                     avatarImg.src = response.photoUrl;
@@ -221,13 +223,16 @@
         }
 
         function ouvrirEnquete() {
-            // Sécurité ultime pour récupérer l'ID si vide
-            if (!currentIdMembre) {
-                const urlParams = new URLSearchParams(window.location.search);
-                currentIdMembre = urlParams.get('code') || urlParams.get('id') || '';
+            // Double sécurité : si currentIdMembre est vide, on le reprend direct de l'URL
+            if (!currentIdMembre || currentIdMembre === "undefined") {
+                const paramsSecours = new URLSearchParams(window.location.search);
+                currentIdMembre = paramsSecours.get('code') || paramsSecours.get('id') || '';
             }
 
+            // Génération de l'URL Google Forms pré-remplie
             const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(currentIdMembre);
+            
+            // Ouvre le formulaire dans un nouvel onglet avec l'ID injecté proprement
             window.open(urlFormulaire, "_blank");
         }
 
