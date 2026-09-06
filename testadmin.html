@@ -248,8 +248,17 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Affichage direct de l'heure renvoyée par le script Apps Script
-                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
+                // Extraction sécurisée de l'heure au format HH:mm pour éradiquer les résidus comme "Sat D"
+                let heureClean = "";
+                if (m.heure) {
+                    let hStr = m.heure.toString().trim();
+                    let match = hStr.match(/(\d{2}:\d{2})/);
+                    if (match) {
+                        heureClean = match[1];
+                    }
+                }
+
+                let heureDisplay = heureClean ? `<span class="heure-text">${heureClean}</span>` : '';
 
                 return `
                     <div class="member-item">
