@@ -126,18 +126,26 @@
 <body>
 
     <div class="container">
+        <!-- Utilisation directe de logo.png -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- Avatar du Membre (src vide au départ pour éviter les images parasites) -->
+        <!-- Avatar avec une image transparente par défaut pour éviter tout texte cassé -->
         <div class="avatar-container">
-            <img id="member-avatar" src="" alt="Photo membre" class="avatar">
+            <img id="member-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130'></svg>" alt="" class="avatar">
         </div>
 
-        <!-- Zone dynamique gérée entièrement par votre script -->
+        <!-- Zone dynamique gérée par ton script lors du scan -->
         <div id="dynamic-content">
-            <p style="color: #64748b; font-size: 14px;">En attente de scan...</p>
+            <div class="alert-box-success">
+                <p>✓ SORTIE VALIDÉE</p>
+                <span class="member-name">Prêt à scanner</span>
+                <span class="member-id">ID : --</span>
+            </div>
+            <div class="buttons-group">
+                <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+            </div>
         </div>
     </div>
 
@@ -146,12 +154,10 @@
             const avatarImg = document.getElementById('member-avatar');
             const dynamicContent = document.getElementById('dynamic-content');
 
-            // Intégration dynamique de la vraie photo du membre scanné
             if (response.photoUrl) {
                 avatarImg.src = response.photoUrl;
             }
 
-            // Si l'enquête est requise
             if (response.status === "require_survey") {
                 dynamicContent.innerHTML = `
                     <div class="alert-box-orange">
@@ -163,9 +169,7 @@
                         <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
                     </div>
                 `;
-            } 
-            // Si la sortie est validée avec succès
-            else if (response.status === "success") {
+            } else if (response.status === "success") {
                 dynamicContent.innerHTML = `
                     <div class="alert-box-success">
                         <p>✓ SORTIE VALIDÉE</p>
