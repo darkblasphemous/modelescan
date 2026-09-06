@@ -16,74 +16,81 @@
         }
         .container {
             background: #ffffff;
-            padding: 35px 30px;
+            padding: 40px 35px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             text-align: center;
             width: 440px;
             box-sizing: border-box;
         }
-        /* Le vrai logo rond d'origine */
+        /* Vrai logo rond d'origine */
         .logo {
-            width: 95px;
-            height: 95px;
+            width: 100px;
+            height: 100px;
             object-fit: contain;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         h2 {
             color: #1e293b;
             font-size: 22px;
             font-weight: 700;
-            margin-top: 5px;
-            margin-bottom: 20px;
+            margin-top: 0;
+            margin-bottom: 25px;
         }
         .avatar-container {
-            margin-bottom: 22px;
+            margin-bottom: 25px;
             display: flex;
             justify-content: center;
         }
         .avatar {
-            width: 105px;
-            height: 105px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #10b981;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            border: 4px solid #10b981;
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
             background-color: #e2e8f0;
         }
-        /* Boîte d'alerte orange exacte */
-        .alert-box-orange {
-            background-color: #f97316;
+        /* Boîte Turquoise exacte pour la sortie validée */
+        .alert-box-success {
+            background-color: #0e94b2; /* Teinte turquoise exacte de ton image */
             color: white;
-            padding: 20px;
+            padding: 24px 20px;
             border-radius: 12px;
-            margin-bottom: 22px;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            margin-bottom: 25px;
+            box-shadow: 0 6px 18px rgba(14, 148, 178, 0.3);
             text-align: center;
         }
-        .alert-box-orange p {
-            margin: 0 0 6px 0;
-            font-size: 14.5px;
-            font-weight: 500;
-        }
-        .alert-box-orange strong {
-            font-size: 19px;
+        .alert-box-success p {
+            margin: 0 0 8px 0;
+            font-size: 15px;
             font-weight: 700;
-            text-transform: lowercase;
             letter-spacing: 0.5px;
         }
-        /* Groupe de boutons */
+        .alert-box-success .member-name {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: lowercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .alert-box-success .member-id {
+            font-size: 13.5px;
+            font-weight: 500;
+            opacity: 0.95;
+            letter-spacing: 0.3px;
+        }
+        /* Bouton unique centré */
         .buttons-group {
             display: flex;
-            gap: 12px;
             justify-content: center;
         }
         .btn {
-            flex: 1;
-            padding: 13px 10px;
+            width: 100%;
+            padding: 14px 10px;
             border: none;
             border-radius: 10px;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -100,8 +107,8 @@
 <body>
 
     <div class="container">
-        <!-- Vrai logo d'origine (Mets ton lien d'image ici ou ton fichier local) -->
-        <img src="VOTRE_LIEN_OU_NOM_DU_LOGO.png" alt="Logo ASTER" class="logo">
+        <!-- Mets ton lien de logo ici -->
+        <img src="VOTRE_LOGO.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
@@ -110,9 +117,16 @@
             <img id="member-avatar" src="" alt="Photo membre" class="avatar">
         </div>
 
-        <!-- Zone dynamique -->
+        <!-- Zone dynamique affichant exactement le design demandé -->
         <div id="dynamic-content">
-            <!-- Inséré dynamiquement par le script -->
+            <div class="alert-box-success">
+                <p>✓ SORTIE VALIDÉE</p>
+                <span class="member-name">alan wilder</span>
+                <span class="member-id">ID : ASTER-EVENEMENT2026-001</span>
+            </div>
+            <div class="buttons-group">
+                <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+            </div>
         </div>
     </div>
 
@@ -125,32 +139,18 @@
                 avatarImg.src = response.photoUrl;
             }
 
-            if (response.status === "require_survey") {
+            if (response.status === "success") {
                 dynamicContent.innerHTML = `
-                    <div class="alert-box-orange">
-                        <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                        <strong>${response.nom}</strong>
-                    </div>
-                    <div class="buttons-group">
-                        <button class="btn btn-primary" onclick="ouvrirEnquete('${response.id}')">Remplir l'enquête</button>
-                        <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
-                    </div>
-                `;
-            } else if (response.status === "success") {
-                dynamicContent.innerHTML = `
-                    <div style="background-color: #10b981; color: white; padding: 20px; border-radius: 12px; margin-bottom: 22px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                        <p style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: bold;">✓ SORTIE ENREGISTRÉE</p>
-                        <strong style="font-size: 19px; text-transform: uppercase;">${response.nom}</strong>
+                    <div class="alert-box-success">
+                        <p>✓ SORTIE VALIDÉE</p>
+                        <span class="member-name">${response.nom}</span>
+                        <span class="member-id">ID : ${response.id}</span>
                     </div>
                     <div class="buttons-group">
                         <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
                     </div>
                 `;
             }
-        }
-
-        function ouvrirEnquete(idMembre) {
-            window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform?entry.ID=" + idMembre, "_blank");
         }
 
         function nouveauScan() {
