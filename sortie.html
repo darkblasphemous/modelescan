@@ -23,7 +23,6 @@
             width: 440px;
             box-sizing: border-box;
         }
-        /* Taille exacte du logo alignée sur l'entrée */
         .logo {
             width: 130px;
             height: 130px;
@@ -42,7 +41,6 @@
             display: flex;
             justify-content: center;
         }
-        /* Taille exacte de la photo du membre alignée sur l'entrée */
         .avatar {
             width: 130px;
             height: 130px;
@@ -52,7 +50,6 @@
             box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
             background-color: #e2e8f0;
         }
-        /* Boîte Turquoise exacte pour la sortie validée */
         .alert-box-success {
             background-color: #0e94b2;
             color: white;
@@ -81,7 +78,6 @@
             opacity: 0.95;
             letter-spacing: 0.3px;
         }
-        /* Bouton unique */
         .buttons-group {
             display: flex;
             justify-content: center;
@@ -108,17 +104,15 @@
 <body>
 
     <div class="container">
-        <!-- Logo intégré directement -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- Photo du membre -->
+        <!-- src vide pour laisser le script injecter la bonne photo comme sur l'entrée -->
         <div class="avatar-container">
-            <img id="member-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" alt="Photo membre" class="avatar">
+            <img id="member-avatar" src="" alt="Photo membre" class="avatar">
         </div>
 
-        <!-- Affichage direct du résultat validé -->
         <div id="dynamic-content">
             <div class="alert-box-success">
                 <p>✓ SORTIE VALIDÉE</p>
