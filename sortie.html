@@ -217,8 +217,15 @@
         }
 
         function ouvrirEnquete(idMembre) {
-            // URL du formulaire Google Forms avec ton entry.648947853 injecté dynamiquement
-            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(idMembre);
+            // Récupération sécurisée de l'ID (paramètre ou fallback direct sur l'URL de la page si besoin)
+            let idFinal = idMembre;
+            if (!idFinal || idFinal === "undefined") {
+                const urlParams = new URLSearchParams(window.location.search);
+                idFinal = urlParams.get('code') || urlParams.get('id') || '';
+            }
+
+            // URL du formulaire Google Forms avec l'ID injecté dans entry.648947853
+            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(idFinal);
             window.open(urlFormulaire, "_blank");
         }
 
