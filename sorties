@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle des Sorties - ASTER</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #ffffff;
+            padding: 40px 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 440px;
+            box-sizing: border-box;
+        }
+        .logo {
+            width: 130px;
+            height: 130px;
+            object-fit: contain;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #1e293b;
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .avatar-container {
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: center;
+        }
+        .avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #cbd5e1;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            background-color: #e2e8f0;
+        }
+        .alert-box-loading {
+            background-color: #64748b;
+            color: white;
+            padding: 24px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 18px rgba(100, 116, 139, 0.3);
+            text-align: center;
+        }
+        .alert-box-loading p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .alert-box-success {
+            background-color: #0e94b2;
+            color: white;
+            padding: 24px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 6px 18px rgba(14, 148, 178, 0.3);
+            text-align: center;
+        }
+        .alert-box-success p {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .alert-box-success .member-name {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .alert-box-success .member-id {
+            font-size: 13.5px;
+            font-weight: 500;
+            opacity: 0.95;
+            letter-spacing: 0.3px;
+        }
+        .alert-box-orange {
+            background-color: #f97316;
+            color: white;
+            padding: 22px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            text-align: center;
+        }
+        .alert-box-orange p {
+            margin: 0 0 6px 0;
+            font-size: 14.5px;
+            font-weight: 500;
+        }
+        .alert-box-orange strong {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-top: 5px;
+        }
+        .buttons-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="logo.png" alt="Logo ASTER" class="logo">
+        
+        <h2>Contrôle des Sorties</h2>
+
+        <div class="avatar-container">
+            <img id="member-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3C/svg%3E" alt="" class="avatar">
+        </div>
+
+        <div id="dynamic-content">
+            <div class="alert-box-loading">
+                <p>⏳ VÉRIFICATION...</p>
+            </div>
+            <div class="buttons-group">
+                <button class="btn btn-primary" onclick="nouveauScan()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentIdMembre = urlParams.get('code') || urlParams.get('id') || "";
+
+        window.onload = function() {
+            if (currentIdMembre) {
+                appelerAPI(currentIdMembre);
+            } else {
+                const dynamicContent = document.getElementById('dynamic-content');
+                dynamicContent.innerHTML = `
+                    <div class="alert-box-orange">
+                        <p>⚠️ Aucun identifiant détecté</p>
+                        <strong>Veuillez scanner une carte</strong>
+                    </div>
+                    <div class="buttons-group">
+                        <button class="btn btn-primary" onclick="nouveauScan()">Réessayer</button>
+                    </div>
+                `;
+            }
+        };
+
+        function appelerAPI(code) {
+            const urlAppsScript = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec?action=sortie&code=" + encodeURIComponent(code);
+
+            fetch(urlAppsScript)
+                .then(response => response.json())
+                .then(data => {
+                    afficherResultat(data);
+                })
+                .catch(error => {
+                    console.error("Erreur de connexion avec l'API :", error);
+                    const dynamicContent = document.getElementById('dynamic-content');
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-orange">
+                            <p>⚠️ Erreur réseau</p>
+                            <strong>Impossible de joindre le serveur</strong>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="nouveauScan()">Réessayer</button>
+                        </div>
+                    `;
+                });
+        }
+
+        function afficherResultat(response) {
+            const avatarImg = document.getElementById('member-avatar');
+            const dynamicContent = document.getElementById('dynamic-content');
+
+            if (response) {
+                if (response.id && response.id !== "undefined") {
+                    currentIdMembre = response.id;
+                } else if (response.memberId && response.memberId !== "undefined") {
+                    currentIdMembre = response.memberId;
+                }
+
+                if (response.photoUrl) {
+                    avatarImg.src = response.photoUrl;
+                    avatarImg.style.borderColor = "#10b981";
+                }
+
+                if (response.status === "require_survey") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-orange">
+                            <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                            <strong>${response.nom}</strong>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="ouvrirEnquete()">Remplir l'enquête</button>
+                            <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                        </div>
+                    `;
+                } else if (response.status === "success") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-success">
+                            <p>✓ SORTIE VALIDÉE</p>
+                            <span class="member-name">${response.nom}</span>
+                            <span class="member-id">ID : ${currentIdMembre}</span>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                        </div>
+                    `;
+                } else if (response.status === "error") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-orange">
+                            <p>⚠️ Erreur</p>
+                            <strong>${response.message}</strong>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="nouveauScan()">Réessayer</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function ouvrirEnquete() {
+            if (!currentIdMembre || currentIdMembre === "undefined") {
+                alert("Erreur : Impossible de pré-remplir le formulaire car l'ID du membre est introuvable.");
+                return;
+            }
+
+            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(currentIdMembre);
+            window.open(urlFormulaire, "_blank");
+        }
+
+        function nouveauScan() {
+            window.location.href = "sortie.html";
+        }
+    </script>
+</body>
+</html>
