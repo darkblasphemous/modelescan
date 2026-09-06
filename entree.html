@@ -37,16 +37,17 @@
             margin: 0 0 20px 0;
         }
         .photo-container {
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            margin: 10px auto 20px auto;
-            border: 4px solid #00c896;
+            margin: 10px auto 25px auto;
+            border: 4px solid #10b981;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #f8fafc;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
         .photo-container img {
             width: 100%;
@@ -55,34 +56,46 @@
         }
         .alert-box {
             width: 100%;
-            padding: 16px;
+            padding: 20px 15px;
             border-radius: 16px;
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             line-height: 1.4;
         }
-        .alert-success { background-color: #00c896; color: white; }
-        .alert-warning { background-color: #ff7e1d; color: white; }
-        .alert-danger { background-color: #ff4757; color: white; }
+        .alert-success { background-color: #10b981; color: white; }
+        .alert-warning { background-color: #f59e0b; color: white; }
+        .alert-danger { background-color: #ef4444; color: white; }
         .alert-info { background-color: #e2e8f0; color: #475569; }
         
-        .heure-text {
+        .status-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .user-name {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .user-id {
             font-size: 13px;
-            font-weight: 500;
-            margin-top: 6px;
+            font-weight: 600;
+            opacity: 0.9;
         }
         .btn {
             width: 100%;
             padding: 14px;
             border-radius: 12px;
             border: none;
-            background-color: #0066ff;
+            background-color: #007bff;
             color: white;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
+            transition: background 0.2s;
         }
+        .btn:hover { background-color: #0056b3; }
         .screen { display: none; }
         .screen.active { display: block; }
     </style>
@@ -98,28 +111,30 @@
             <div class="alert-box alert-info">Validation en cours...</div>
         </div>
 
-        <!-- ÉCRAN 2 : Succès -->
+        <!-- ÉCRAN 2 : Succès Entrée -->
         <div id="screen-success" class="screen">
             <div class="photo-container">
                 <img id="img-success" src="" alt="Photo" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-success">
-                <span id="name-success">Membre</span>
-                <div class="heure-text">Arrivée : <span id="time-success">--:--</span></div>
+                <div class="status-title">✓ ENTRÉE VALIDÉE</div>
+                <div class="user-name" id="name-success">Nom Membre</div>
+                <div class="user-id">ID : <span id="id-success">---</span></div>
             </div>
-            <button class="btn" onclick="resetPage()">Terminer</button>
+            <button class="btn" onclick="resetPage()">Scanner un autre</button>
         </div>
 
         <!-- ÉCRAN 3 : Déjà Présent -->
         <div id="screen-already" class="screen">
-            <div class="photo-container" style="border-color: #ff7e1d;">
+            <div class="photo-container" style="border-color: #f59e0b;">
                 <img id="img-already" src="" alt="Photo" onerror="this.src='logo.png'">
             </div>
             <div class="alert-box alert-warning">
-                ⚠️ <span id="name-already">Membre</span> est déjà présent.
-                <div class="heure-text">Enregistré à : <span id="time-already">--:--</span></div>
+                <div class="status-title">⚠️ DÉJÀ PRÉSENT</div>
+                <div class="user-name" id="name-already">Nom Membre</div>
+                <div class="user-id">ID : <span id="id-already">---</span></div>
             </div>
-            <button class="btn" onclick="resetPage()">Terminer</button>
+            <button class="btn" onclick="resetPage()">Scanner un autre</button>
         </div>
 
         <!-- ÉCRAN 4 : Erreur -->
@@ -132,7 +147,6 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
 
-        // Convertit les liens Drive vers un affichage direct
         function convertDriveUrl(url) {
             if (!url || !url.startsWith("http")) return "logo.png";
             if (url.includes("drive.google.com")) {
@@ -146,7 +160,6 @@
             return url;
         }
 
-        // Fonctions d'affichage des écrans
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -154,16 +167,16 @@
 
         function showLoadingScreen() { showScreen('screen-loading'); }
 
-        function showSuccessScreen(nom, photo, heure) {
+        function showSuccessScreen(nom, id, photo) {
             document.getElementById('name-success').innerText = nom || "Membre";
-            document.getElementById('time-success').innerText = heure || "--:--";
+            document.getElementById('id-success').innerText = id || "---";
             document.getElementById('img-success').src = convertDriveUrl(photo);
             showScreen('screen-success');
         }
 
-        function showAlreadyInScreen(nom, photo, heure) {
+        function showAlreadyInScreen(nom, id, photo) {
             document.getElementById('name-already').innerText = nom || "Membre";
-            document.getElementById('time-already').innerText = heure || "--:--";
+            document.getElementById('id-already').innerText = id || "---";
             document.getElementById('img-already').src = convertDriveUrl(photo);
             showScreen('screen-already');
         }
@@ -174,10 +187,9 @@
         }
 
         function resetPage() {
-            window.location.reload();
+            window.location.href = window.location.pathname;
         }
 
-        // Envoi de la requête au serveur Google Apps Script
         function validerEntree(idScanne) {
             if (!idScanne || idScanne.trim() === "") {
                 showErrorScreen("ID ou code QR invalide.");
@@ -203,25 +215,26 @@
             document.body.appendChild(script);
         }
 
-        // Traitement de la réponse transmise par le serveur
         window.handleScanResponse = function(response) {
             console.log("Réponse serveur :", response);
 
             if (response.status === "success") {
-                showSuccessScreen(response.nom, response.photoUrl, response.heure);
+                showSuccessScreen(response.nom, response.id || currentScannedId, response.photoUrl);
             } else if (response.status === "already_in") {
-                showAlreadyInScreen(response.nom, response.photoUrl, response.heure);
+                showAlreadyInScreen(response.nom, response.id || currentScannedId, response.photoUrl);
             } else {
                 showErrorScreen(response.message || "Erreur lors de la validation.");
             }
         };
 
-        // Execution automatique si l'ID est dans l'URL (?id=...)
+        let currentScannedId = "";
+
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const scannedId = urlParams.get('id') || urlParams.get('code') || urlParams.get('qr');
 
             if (scannedId) {
+                currentScannedId = scannedId;
                 validerEntree(scannedId);
             } else {
                 showErrorScreen("Aucun ID détecté.");
