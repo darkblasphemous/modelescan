@@ -1,3 +1,6 @@
+<!-- ========================================== -->
+<!-- DEBUT DU FICHIER : inscrits.html           -->
+<!-- ========================================== -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -18,31 +21,29 @@
         }
         .main-container {
             width: 100%;
-            max-width: 460px;
+            max-width: 480px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .logo {
-            width: 170px;
+            width: 180px;
             height: auto;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             object-fit: contain;
         }
         h2 {
             color: #1e293b;
             font-size: 26px;
             font-weight: 800;
-            margin: 0 0 10px 0;
+            margin: 0 0 15px 0;
             text-align: center;
         }
-        
-        /* Pilule "Total inscrits 18" */
         .total-pill {
             background: white;
             padding: 6px 16px;
             border-radius: 20px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             color: #1e293b;
             box-shadow: 0 2px 6px rgba(0,0,0,0.04);
@@ -52,15 +53,13 @@
             margin-bottom: 20px;
         }
         .badge-count {
-            background-color: #00c896;
-            color: white;
-            padding: 2px 9px;
+            padding: 2px 8px;
             border-radius: 12px;
-            font-size: 14px;
+            color: white;
+            font-size: 12px;
             font-weight: 800;
+            background-color: #00c896;
         }
-
-        /* Carte Principale */
         .card {
             background: white;
             border-radius: 20px;
@@ -68,8 +67,6 @@
             width: 100%;
             box-shadow: 0 10px 25px rgba(0,0,0,0.04);
         }
-
-        /* Champ de recherche */
         .search-box {
             width: 100%;
             padding: 12px 16px;
@@ -77,38 +74,19 @@
             border-radius: 12px;
             font-size: 14px;
             outline: none;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             color: #334155;
-            background-color: #ffffff;
         }
-        .search-box::placeholder {
-            color: #94a3b8;
-        }
-
-        /* Liste Défilante */
         .member-list {
-            max-height: 480px;
+            max-height: 440px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
-        
-        /* Personnalisation de la barre de défilement pour coller à la capture */
-        .member-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        .member-list::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .member-list::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 4px;
-        }
-
-        /* Élément Membre */
         .member-item {
             display: flex;
             align-items: center;
+            gap: 12px;
             padding: 12px 4px;
             border-bottom: 1px solid #f1f5f9;
         }
@@ -120,7 +98,6 @@
             height: 46px;
             border-radius: 50%;
             object-fit: cover;
-            margin-right: 14px;
             border: 1px solid #e2e8f0;
         }
         .member-details {
@@ -136,7 +113,6 @@
             font-size: 11px;
             color: #94a3b8;
             margin-top: 2px;
-            letter-spacing: 0.3px;
         }
     </style>
 </head>
@@ -146,35 +122,37 @@
         <img src="logo.png" alt="ASTER" class="logo">
         <h2>Liste des Inscrits</h2>
 
-        <div class="total-pill">
-            Total inscrits <span class="badge-count" id="count-inscrits">0</span>
-        </div>
+        <div class="total-pill">Total inscrits <span class="badge-count" id="count-total">0</span></div>
 
         <div class="card">
             <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
             
             <div class="member-list" id="member-list">
-                <p style="text-align: center; color: #94a3b8;">Chargement des données...</p>
+                <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement...</p>
             </div>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
         function fetchMembers() {
-            fetch(`${SCRIPT_URL}?action=getMembers`)
+            fetch(SCRIPT_URL)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.members) {
-                        allMembers = data.members;
-                        document.getElementById("count-inscrits").innerText = allMembers.length;
+                    const list = data.members || (Array.isArray(data) ? data : []);
+                    if (list.length > 0) {
+                        allMembers = list;
+                        document.getElementById("count-total").innerText = allMembers.length;
                         renderList(allMembers);
+                    } else {
+                        document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
                     }
                 })
                 .catch(err => {
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444;">Erreur lors du chargement.</p>`;
+                    console.error("Erreur:", err);
+                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur lors du chargement.</p>`;
                 });
         }
 
@@ -185,28 +163,38 @@
                 return;
             }
 
-            container.innerHTML = members.map(m => `
-                <div class="member-item">
-                    <img src="${m.photoUrl || 'logo.png'}" class="member-photo" alt="Photo">
-                    <div class="member-details">
-                        <div class="member-name">${m.nom}</div>
-                        <div class="member-id">${m.id}</div>
+            container.innerHTML = members.map(m => {
+                let nom = m.nom || "Inconnu";
+                let id = m.id || "";
+                let photo = m.photoUrl || 'logo.png';
+
+                return `
+                    <div class="member-item">
+                        <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
+                        <div class="member-details">
+                            <div class="member-name">${nom}</div>
+                            <div class="member-id">${id}</div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
-            const filtered = allMembers.filter(m => 
-                m.nom.toLowerCase().includes(query) || 
-                m.id.toLowerCase().includes(query)
-            );
+            const filtered = allMembers.filter(m => {
+                let nom = (m.nom || "").toLowerCase();
+                let id = (m.id || "").toLowerCase();
+                return nom.includes(query) || id.includes(query);
+            });
             renderList(filtered);
         }
 
-        // Chargement au démarrage
         fetchMembers();
+        setInterval(fetchMembers, 5000);
     </script>
 </body>
 </html>
+<!-- ========================================== -->
+<!-- FIN DU FICHIER : inscrits.html             -->
+<!-- ========================================== -->
