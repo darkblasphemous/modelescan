@@ -1,12 +1,18 @@
-<!-- ========================================== -->
-<!-- DEBUT DU FICHIER : inscrits.html           -->
-<!-- ========================================== -->
+<!-- ============================================================================ -->
+<!-- PROJET : APPLICATION DE GESTION ET SUIVI DES MEMBRES (ASTER)                -->
+<!-- FICHIER : inscrits.html                                                      -->
+<!-- ============================================================================ -->
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Inscrits - ASTER</title>
+
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION STYLES (CSS)                                         -->
+    <!-- ======================================================================== -->
     <style>
         * { box-sizing: border-box; }
         body {
@@ -39,7 +45,14 @@
             margin: 0 0 15px 0;
             text-align: center;
         }
-        .total-pill {
+        
+        /* Badges de comptage */
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .stat-pill {
             background: white;
             padding: 6px 16px;
             border-radius: 20px;
@@ -50,7 +63,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 20px;
         }
         .badge-count {
             padding: 2px 8px;
@@ -60,6 +72,8 @@
             font-weight: 800;
             background-color: #00c896;
         }
+
+        /* Carte principale de recherche et liste */
         .card {
             background: white;
             border-radius: 20px;
@@ -67,6 +81,7 @@
             width: 100%;
             box-shadow: 0 10px 25px rgba(0,0,0,0.04);
         }
+
         .search-box {
             width: 100%;
             padding: 12px 16px;
@@ -76,22 +91,30 @@
             outline: none;
             margin-bottom: 15px;
             color: #334155;
+            background-color: #fff;
         }
+
         .member-list {
             max-height: 440px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
+
         .member-item {
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
             padding: 12px 4px;
             border-bottom: 1px solid #f1f5f9;
         }
         .member-item:last-child {
             border-bottom: none;
+        }
+        .member-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         .member-photo {
             width: 46px;
@@ -99,6 +122,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
         }
         .member-details {
             display: flex;
@@ -115,47 +139,98 @@
             margin-top: 2px;
         }
     </style>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION STYLES (CSS)                                           -->
+    <!-- ======================================================================== -->
 </head>
 <body>
 
+    <!-- ======================================================================== -->
+    <!-- DEBUT DU CONTENU HTML (INTERFACE UTILISATEUR)                           -->
+    <!-- ======================================================================== -->
     <div class="main-container">
         <img src="logo.png" alt="ASTER" class="logo">
         <h2>Liste des Inscrits</h2>
 
-        <div class="total-pill">Total inscrits <span class="badge-count" id="count-total">0</span></div>
+        <!-- Total des inscrits -->
+        <div class="stats-container">
+            <div class="stat-pill">Total inscrits <span class="badge-count" id="count-inscrits">0</span></div>
+        </div>
 
+        <!-- Recherche et Liste -->
         <div class="card">
             <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
             
             <div class="member-list" id="member-list">
-                <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement...</p>
+                <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
             </div>
         </div>
     </div>
+    <!-- ======================================================================== -->
+    <!-- FIN DU CONTENU HTML                                                      -->
+    <!-- ======================================================================== -->
 
+
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION SCRIPTS (JAVASCRIPT)                                 -->
+    <!-- ======================================================================== -->
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
-        function fetchMembers() {
-            fetch(SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => {
-                    const list = data.members || (Array.isArray(data) ? data : []);
-                    if (list.length > 0) {
-                        allMembers = list;
-                        document.getElementById("count-total").innerText = allMembers.length;
-                        renderList(allMembers);
-                    } else {
-                        document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
-                    }
-                })
-                .catch(err => {
-                    console.error("Erreur:", err);
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur lors du chargement.</p>`;
-                });
+        // ----------------------------------------------------------------------
+        // FONCTION : Conversion d'URL Google Drive vers lien direct d'image
+        // ----------------------------------------------------------------------
+        function convertDriveUrl(url) {
+            if (!url || !url.startsWith("http")) return "logo.png";
+            
+            if (url.includes("drive.google.com")) {
+                let id = "";
+                const matchId = url.match(/\/d\/([^\/]+)/);
+                const matchQuery = url.match(/id=([^&]+)/);
+                
+                if (matchId && matchId[1]) {
+                    id = matchId[1];
+                } else if (matchQuery && matchQuery[1]) {
+                    id = matchQuery[1];
+                }
+
+                if (id) {
+                    return `https://lh3.googleusercontent.com/d/${id}`;
+                }
+            }
+            return url;
         }
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Récupération des données via JSONP
+        // ----------------------------------------------------------------------
+        function fetchMembers() {
+            const oldScript = document.getElementById('jsonp-script');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-script';
+            script.src = `${SCRIPT_URL}?action=getMembers&callback=handleResponse&_=` + new Date().getTime();
+            document.body.appendChild(script);
+        }
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Réception des données du script Google
+        // ----------------------------------------------------------------------
+        window.handleResponse = function(data) {
+            if (data && data.members && data.members.length > 0) {
+                allMembers = data.members;
+                document.getElementById("count-inscrits").innerText = allMembers.length;
+                renderList(allMembers);
+            } else {
+                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
+            }
+        };
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Rendu HTML des cartes membres avec leur photo de profil
+        // ----------------------------------------------------------------------
         function renderList(members) {
             const container = document.getElementById("member-list");
             if (members.length === 0) {
@@ -164,22 +239,29 @@
             }
 
             container.innerHTML = members.map(m => {
-                let nom = m.nom || "Inconnu";
+                let nom = m.nom || "Membre";
                 let id = m.id || "";
-                let photo = m.photoUrl || 'logo.png';
+                
+                // Active la conversion du lien de photo Google Drive
+                let photo = convertDriveUrl(m.photoUrl);
 
                 return `
                     <div class="member-item">
-                        <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
-                        <div class="member-details">
-                            <div class="member-name">${nom}</div>
-                            <div class="member-id">${id}</div>
+                        <div class="member-left">
+                            <img src="${photo}" class="member-photo" alt="${nom}" onerror="this.onerror=null; this.src='logo.png';">
+                            <div class="member-details">
+                                <div class="member-name">${nom}</div>
+                                <div class="member-id">${id}</div>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // ----------------------------------------------------------------------
+        // FONCTION : Recherche dynamique en temps réel
+        // ----------------------------------------------------------------------
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
             const filtered = allMembers.filter(m => {
@@ -190,11 +272,17 @@
             renderList(filtered);
         }
 
+        // Chargement automatique au démarrage
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION SCRIPTS                                                -->
+    <!-- ======================================================================== -->
+
 </body>
 </html>
-<!-- ========================================== -->
-<!-- FIN DU FICHIER : inscrits.html             -->
-<!-- ========================================== -->
+
+<!-- ============================================================================ -->
+<!-- FIN DU FICHIER : inscrits.html                                               -->
+<!-- ============================================================================ -->
