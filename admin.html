@@ -179,7 +179,7 @@
 
     <div class="main-container">
         <img src="logo.png" alt="ASTER" class="logo">
-        <h2>Liste des Inscrits</h2>
+        <h2>Administration</h2>
 
         <div class="stats-container">
             <div class="stat-pill">In: <span class="badge-count bg-in" id="count-in">0</span></div>
@@ -197,11 +197,11 @@
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
         function fetchMembers() {
-            fetch(SCRIPT_URL)
+            fetch(`${SCRIPT_URL}?action=getMembers`)
                 .then(res => res.json())
                 .then(data => {
                     const list = data.members || (Array.isArray(data) ? data : []);
@@ -244,7 +244,10 @@
             container.innerHTML = members.map(m => {
                 let nom = m.nom || "Inconnu";
                 let id = m.id || "";
-                let photo = m.photoUrl || 'logo.png';
+                
+                // Vérification de la présence de la photo renvoyée par le script Google
+                let photo = (m.photoUrl && m.photoUrl.trim() !== "") ? m.photoUrl : 'logo.png';
+                
                 let st = (m.statut || "Inscrit").toString().trim();
                 let stLower = st.toLowerCase();
                 
