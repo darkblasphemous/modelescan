@@ -1,4 +1,195 @@
-<script>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration - ASTER</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo-container img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        /* Badges de comptage */
+        .stats-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-badge {
+            background: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-weight: bold;
+            font-size: 14px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-badge span {
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .badge-in { background-color: #10b981; }
+        .badge-out { background-color: #ef4444; }
+        .badge-inscrits { background-color: #0284c7; }
+
+        /* Conteneur principal */
+        .main-card {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Barre de recherche */
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus {
+            border-color: #0284c7;
+        }
+
+        /* Liste des membres */
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .member-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-photo {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #cbd5e1;
+        }
+
+        .member-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .member-name {
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .member-id {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .member-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        /* Badges de statut par membre */
+        .status-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .status-badge.present { background-color: #d1fae5; color: #065f46; }
+        .status-badge.sorti { background-color: #fee2e2; color: #991b1b; }
+        .status-badge.inscrit { background-color: #e0f2fe; color: #0369a1; }
+
+        .heure-text {
+            font-size: 11px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo ASTER" onerror="this.src='https://via.placeholder.com/120'">
+    </div>
+
+    <h1>Administration</h1>
+
+    <!-- Badges de comptage globaux -->
+    <div class="stats-container">
+        <div class="stat-badge">In: <span class="badge-in" id="count-in">0</span></div>
+        <div class="stat-badge">Out: <span class="badge-out" id="count-out">0</span></div>
+        <div class="stat-badge">Inscrits: <span class="badge-inscrits" id="count-inscrits">0</span></div>
+    </div>
+
+    <!-- Carte principale de recherche et liste -->
+    <div class="main-card">
+        <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
+        
+        <div id="member-list" class="member-list">
+            <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
+        </div>
+    </div>
+
+    <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
@@ -12,7 +203,9 @@
             const script = document.createElement('script');
             script.id = 'jsonp-script';
             script.src = `${SCRIPT_URL}?action=getmembers&callback=handleResponse&_=` + new Date().getTime();
-            document.body.appendChild(script);
+            
+            // Ajout sécurisé dans le head
+            document.head.appendChild(script);
         }
 
         // ----------------------------------------------------------------------
@@ -22,7 +215,7 @@
             if (data && data.status === "success" && data.members && data.members.length > 0) {
                 allMembers = data.members;
                 updateStats();
-                filterMembers(); // Applique le filtre actuel (ou affiche tout si la recherche est vide)
+                filterMembers(); // Applique le filtre actuel ou rafraîchit la liste complète
             } else {
                 document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
             }
@@ -106,3 +299,5 @@
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
+</body>
+</html>
