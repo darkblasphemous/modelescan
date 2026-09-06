@@ -224,8 +224,8 @@
             
             <div class="modal-details">
                 <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0284c7;">--</span></p>
-                <p>📥 Entrée (IN) : <span id="modal-in">--:--</span></p>
-                <p>📤 Sortie (OUT) : <span id="modal-out">--:--</span></p>
+                <p>📥 Arrivée : <span id="modal-in">--:--</span></p>
+                <p>📤 Départ : <span id="modal-out">--:--</span></p>
                 <p>📌 Statut : <span id="modal-status">--</span></p>
             </div>
             
@@ -293,9 +293,9 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Utilisation des colonnes exactes "Arrivée"
-                let arriveeVal = m.Arrivée || m.arrivee || m.heureEntree || "--:--";
-                let heureDisplay = `<span class="heure-text">${arriveeVal}</span>`;
+                // Utilisation directe de m.heureIn (qui récupère la colonne Arrivée formatée par ton script)
+                let heureArrivee = (m.heureIn && m.heureIn !== "--:--") ? m.heureIn : "";
+                let heureDisplay = heureArrivee ? `<span class="heure-text">${heureArrivee}</span>` : ``;
 
                 return `
                     <div class="member-item" onclick="openModal('${m.id}')">
@@ -324,12 +324,9 @@
             document.getElementById('modal-id').innerText = m.id || "";
             document.getElementById('modal-email').innerText = m.email || "Non renseigné";
             
-            // Récupération directe des colonnes "Arrivée" et "Départ"
-            let hArrivee = m.Arrivée || m.arrivee || m.heureEntree || "--:--";
-            let hDepart = m.Départ || m.depart || m.heureSortie || "--:--";
-
-            document.getElementById('modal-in').innerText = hArrivee;
-            document.getElementById('modal-out').innerText = hDepart;
+            // Correspondance avec les variables du script Google Apps Script (heureIn / heureOut)
+            document.getElementById('modal-in').innerText = m.heureIn || "--:--";
+            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
             document.getElementById('modal-status').innerText = m.statut || "Inscrit";
 
             document.getElementById('modal').classList.add('active');
