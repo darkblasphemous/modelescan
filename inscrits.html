@@ -86,11 +86,12 @@
     }
 
     .badge-count {
-      background-color: #00b894;
+      background-color: #0984e3;
       color: white;
       border-radius: 50%;
-      width: 28px;
+      min-width: 28px;
       height: 28px;
+      padding: 0 6px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -109,7 +110,7 @@
     }
 
     .search-input:focus {
-      border-color: #00b894;
+      border-color: #0984e3;
     }
 
     .members-scroll-list {
@@ -133,7 +134,7 @@
 
   <h2>Liste des Inscrits</h2>
 
-  <div style="font-size: 1.1em; font-weight: bold; color: #444; max-width: 480px; margin: 0 auto 10px auto; display: flex; align-items: center; justify-content: center;">
+  <div style="font-size: 1.1em; font-weight: bold; color: #444; max-width: 480px; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center;">
     Total inscrits <span class="badge-count" id="totalCount">0</span>
   </div>
   
@@ -145,7 +146,7 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     let tousLesMembres = [];
 
     function chargerMembresJSONP() {
@@ -158,7 +159,7 @@
 
         if (data && data.success && data.members) {
           tousLesMembres = data.members;
-          document.getElementById("totalCount").innerText = data.total;
+          document.getElementById("totalCount").innerText = data.total || tousLesMembres.length;
           afficherMembres(tousLesMembres);
         } else {
           document.getElementById("membersList").innerHTML = `<p class="empty-msg" style="color:red;">Erreur: ${data.error || 'Aucun membre trouvé'}</p>`;
@@ -167,7 +168,7 @@
 
       const scriptTag = document.createElement("script");
       scriptTag.id = callbackName;
-      scriptTag.src = `${SCRIPT_URL}?action=getMembers&callback=${callbackName}`;
+      scriptTag.src = `${SCRIPT_URL}?action=getMembers&_=${new Date().getTime()}&callback=${callbackName}`;
       
       scriptTag.onerror = function() {
         delete window[callbackName];
