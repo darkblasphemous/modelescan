@@ -16,67 +16,58 @@
         }
         .container {
             background: #ffffff;
-            padding: 40px 30px;
+            padding: 35px 30px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             text-align: center;
             width: 440px;
             box-sizing: border-box;
         }
-        /* Logo ASTER stylisé en pur CSS/SVG pour éviter tout lien cassé */
-        .logo-badge {
-            width: 80px;
-            height: 80px;
-            background: #1e3a8a;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            margin: 0 auto 15px auto;
-            box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);
-            border: 3px solid #93c5fd;
+        /* Le vrai logo rond d'origine */
+        .logo {
+            width: 95px;
+            height: 95px;
+            object-fit: contain;
+            margin-bottom: 10px;
         }
         h2 {
             color: #1e293b;
             font-size: 22px;
             font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 25px;
+            margin-top: 5px;
+            margin-bottom: 20px;
         }
         .avatar-container {
-            margin-bottom: 25px;
+            margin-bottom: 22px;
             display: flex;
             justify-content: center;
         }
         .avatar {
-            width: 110px;
-            height: 110px;
+            width: 105px;
+            height: 105px;
             border-radius: 50%;
             object-fit: cover;
-            border: 4px solid #10b981;
-            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.2);
+            border: 3px solid #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
             background-color: #e2e8f0;
         }
-        /* Boîte d'alerte orange exacte demandée */
+        /* Boîte d'alerte orange exacte */
         .alert-box-orange {
             background-color: #f97316;
             color: white;
-            padding: 22px 20px;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 22px;
             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
             text-align: center;
         }
         .alert-box-orange p {
-            margin: 0 0 8px 0;
-            font-size: 15px;
+            margin: 0 0 6px 0;
+            font-size: 14.5px;
             font-weight: 500;
         }
         .alert-box-orange strong {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             text-transform: lowercase;
             letter-spacing: 0.5px;
@@ -89,16 +80,13 @@
         }
         .btn {
             flex: 1;
-            padding: 14px 10px;
+            padding: 13px 10px;
             border: none;
             border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .btn:active {
-            transform: scale(0.98);
+            transition: background-color 0.2s;
         }
         .btn-primary {
             background-color: #007bff;
@@ -112,31 +100,23 @@
 <body>
 
     <div class="container">
-        <!-- Remplacement du logo par un badge propre sans lien externe -->
-        <div class="logo-badge">ASTER</div>
+        <!-- Vrai logo d'origine (Mets ton lien d'image ici ou ton fichier local) -->
+        <img src="VOTRE_LIEN_OU_NOM_DU_LOGO.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- Avatar du Membre (Exemple avec Alan Wilder ou dynamique) -->
+        <!-- Avatar du Membre -->
         <div class="avatar-container">
-            <img id="member-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" alt="Photo membre" class="avatar">
+            <img id="member-avatar" src="" alt="Photo membre" class="avatar">
         </div>
 
-        <!-- Zone dynamique affichant directement le design orange demandé -->
+        <!-- Zone dynamique -->
         <div id="dynamic-content">
-            <div class="alert-box-orange">
-                <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                <strong>alan wilder</strong>
-            </div>
-            <div class="buttons-group">
-                <button class="btn btn-primary" onclick="ouvrirEnquete()">Remplir l'enquête</button>
-                <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
-            </div>
+            <!-- Inséré dynamiquement par le script -->
         </div>
     </div>
 
     <script>
-        // Fonction pour connecter avec votre script Apps Script par la suite
         function afficherResultat(response) {
             const avatarImg = document.getElementById('member-avatar');
             const dynamicContent = document.getElementById('dynamic-content');
@@ -158,9 +138,9 @@
                 `;
             } else if (response.status === "success") {
                 dynamicContent.innerHTML = `
-                    <div style="background-color: #10b981; color: white; padding: 22px 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                        <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold;">✓ SORTIE ENREGISTRÉE</p>
-                        <strong style="font-size: 20px; text-transform: uppercase;">${response.nom}</strong>
+                    <div style="background-color: #10b981; color: white; padding: 20px; border-radius: 12px; margin-bottom: 22px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                        <p style="margin: 0 0 6px 0; font-size: 14.5px; font-weight: bold;">✓ SORTIE ENREGISTRÉE</p>
+                        <strong style="font-size: 19px; text-transform: uppercase;">${response.nom}</strong>
                     </div>
                     <div class="buttons-group">
                         <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
@@ -170,7 +150,7 @@
         }
 
         function ouvrirEnquete(idMembre) {
-            window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform", "_blank");
+            window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform?entry.ID=" + idMembre, "_blank");
         }
 
         function nouveauScan() {
