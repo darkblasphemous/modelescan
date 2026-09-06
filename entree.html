@@ -2,22 +2,28 @@
 // FONCTION : Validation du scan d'entrée
 // ----------------------------------------------------------------------
 function validerEntree(idScanne) {
-    // Afficher l'écran de chargement / validation
+    // Vérification de sécurité locale
+    if (!idScanne || idScanne.trim() === "") {
+        showErrorScreen("Code QR ou ID invalide.");
+        return;
+    }
+
+    // Afficher l'écran de chargement
     showLoadingScreen();
 
     // Nettoyage des anciens scripts JSONP
     const oldScript = document.getElementById('jsonp-scan-script');
     if (oldScript) oldScript.remove();
 
-    // URL complète avec action=scanIn ET id=...
-    const url = `${SCRIPT_URL}?action=scanIn&id=${encodeURIComponent(idScanne)}&callback=handleScanResponse&_=${new Date().getTime()}`;
+    // Construction propre de l'URL avec action=entree
+    const cleanId = idScanne.trim();
+    const url = `${SCRIPT_URL}?action=entree&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
 
-    // Création et injection de la balise script
+    // Création et injection du script
     const script = document.createElement('script');
     script.id = 'jsonp-scan-script';
     script.src = url;
     
-    // Gestion d'erreur réseau / timeout
     script.onerror = function() {
         showErrorScreen("Erreur de connexion au serveur.");
     };
