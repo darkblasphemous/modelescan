@@ -5,288 +5,212 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administration - ASTER</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0; padding: 30px 15px;
+            display: flex; justify-content: center;
+            min-height: 100vh;
         }
-
-        .logo-container {
-            text-align: center;
-            margin-bottom: 10px;
+        .container {
+            width: 100%; max-width: 650px; background: white;
+            border-radius: 24px; padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
+        h2 { color: #1e293b; font-size: 22px; font-weight: 800; text-align: center; margin-top: 0; margin-bottom: 20px; }
 
-        .logo-container img {
-            width: 160px;
-            height: 160px;
-            object-fit: contain;
-        }
-
-        h1 {
-            color: #1e293b;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-
-        /* Badges de comptage */
-        .stats-container {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-badge {
-            background: white;
-            padding: 8px 18px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-weight: bold;
-            font-size: 14px;
-            color: #1e293b;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stat-badge span {
-            padding: 2px 8px;
-            border-radius: 10px;
-            color: white;
-            font-size: 12px;
-        }
-
-        .badge-in { background-color: #10b981; }
-        .badge-out { background-color: #ef4444; }
-        .badge-inscrits { background-color: #0284c7; }
-
-        /* Conteneur principal */
-        .main-card {
-            background: white;
-            width: 100%;
-            max-width: 500px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        /* Statistiques du haut */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+        .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; text-align: center; }
+        .card-stat h3 { margin: 0 0 5px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+        .card-stat .number { font-size: 22px; font-weight: 800; color: #1e293b; }
 
         /* Barre de recherche */
-        .search-box {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            font-size: 14px;
-            outline: none;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-            transition: border-color 0.2s;
+        input[type="text"] {
+            width: 100%; padding: 14px 18px; margin-bottom: 20px;
+            border: 1px solid #cbd5e1; border-radius: 14px; font-size: 15px;
+            background-color: #ffffff; color: #1e293b; outline: none; transition: border-color 0.2s;
         }
+        input[type="text"]:focus { border-color: #0066ff; }
 
-        .search-box:focus {
-            border-color: #0284c7;
+        /* Liste des membres (Style de ta capture) */
+        .members-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 4px; }
+        .member-card {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px;
+            padding: 12px 16px; cursor: pointer; transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
         }
+        .member-card:hover { transform: translateY(-2px); border-color: #94a3b8; box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+        .member-info { display: flex; align-items: center; gap: 15px; }
+        .member-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #e2e8f0; border: 2px solid #e2e8f0; }
+        .member-name { font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 3px; }
+        .member-id { font-size: 12px; color: #64748b; font-weight: 600; }
+        
+        .badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .badge-present { background: #d1fae5; color: #065f46; }
+        .badge-sorti { background: #fee2e2; color: #991b1b; }
+        .badge-inscrit { background: #f1f5f9; color: #475569; }
 
-        /* Liste des membres */
-        .member-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: 400px;
-            overflow-y: auto;
+        /* Fenêtre Modale (Pop-up détails) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-
-        .member-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #f8fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; width: 90%; max-width: 400px; border-radius: 24px; padding: 25px;
+            text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: scaleUp 0.2s ease;
         }
-
-        .member-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .member-photo {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #cbd5e1;
-        }
-
-        .member-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .member-name {
-            font-weight: bold;
-            color: #1e293b;
-            font-size: 14px;
-        }
-
-        .member-id {
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .member-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 3px;
-        }
-
-        /* Badges de statut par membre */
-        .status-badge {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: bold;
-        }
-
-        .status-badge.present { background-color: #d1fae5; color: #065f46; }
-        .status-badge.sorti { background-color: #fee2e2; color: #991b1b; }
-        .status-badge.inscrit { background-color: #e0f2fe; color: #0369a1; }
-
-        /* Style pour l'heure en petit format 00:00 */
-        .heure-text {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 500;
-        }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 15px; border: 4px solid #0066ff; }
+        .modal h3 { margin: 0 0 4px 0; color: #1e293b; font-size: 20px; font-weight: 800; }
+        .modal-details { text-align: left; background: #f8fafc; padding: 15px; border-radius: 16px; margin: 20px 0; font-size: 14px; color: #334155; border: 1px solid #e2e8f0; }
+        .modal-details p { margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-details span { font-weight: 700; color: #0f172a; }
+        .btn-close { width: 100%; padding: 14px; background: #0066ff; color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-close:hover { background: #0052cc; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>Panneau d'Administration</h2>
 
-    <div class="logo-container">
-        <img src="logo.png" alt="Logo ASTER" onerror="this.src='https://via.placeholder.com/160'">
+        <!-- Cartes Statistiques -->
+        <div class="stats-grid">
+            <div class="card-stat">
+                <h3>Inscrits</h3>
+                <div class="number" id="stat-total">-</div>
+            </div>
+            <div class="card-stat">
+                <h3>Présents (IN)</h3>
+                <div class="number" id="stat-presents" style="color: #10b981;">-</div>
+            </div>
+            <div class="card-stat">
+                <h3>Sortis (OUT)</h3>
+                <div class="number" id="stat-sortis" style="color: #ef4444;">-</div>
+            </div>
+        </div>
+
+        <!-- Barre de recherche -->
+        <input type="text" id="search" placeholder="Rechercher un membre par nom ou ID..." onkeyup="filterMembers()">
+
+        <!-- Liste des membres -->
+        <div class="members-list" id="members-container">
+            <p style="text-align: center; color: #64748b; padding: 20px;">Chargement des membres...</p>
+        </div>
     </div>
 
-    <h1>Administration</h1>
-
-    <!-- Badges de comptage globaux -->
-    <div class="stats-container">
-        <div class="stat-badge">In: <span class="badge-in" id="count-in">0</span></div>
-        <div class="stat-badge">Out: <span class="badge-out" id="count-out">0</span></div>
-        <div class="stat-badge">Inscrits: <span class="badge-inscrits" id="count-inscrits">0</span></div>
-    </div>
-
-    <!-- Carte principale de recherche et liste -->
-    <div class="main-card">
-        <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
-        
-        <div id="member-list" class="member-list">
-            <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
+    <!-- Fenêtre Modale (Pop-up détail) -->
+    <div id="modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <img id="modal-photo" src="logo.png" alt="Photo" onerror="this.src='logo.png'">
+            <h3 id="modal-name">Nom Membre</h3>
+            <div id="modal-id" style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 10px;">ID</div>
+            
+            <div class="modal-details">
+                <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #2563eb;">--</span></p>
+                <p>📥 Entrée (IN) : <span id="modal-in">--:--</span></p>
+                <p>📤 Sortie (OUT) : <span id="modal-out">--:--</span></p>
+                <p>📌 Statut : <span id="modal-status">--</span></p>
+            </div>
+            
+            <button class="btn-close" onclick="closeModal()">Fermer</button>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec"; 
+        const SCRIPT_URL = "TON_URL_APPS_SCRIPT_ICI/exec";
         let allMembers = [];
 
-        async function fetchMembers() {
-            try {
-                let response = await fetch(`${SCRIPT_URL}?action=getmembers&_=${new Date().getTime()}`);
-                let data = await response.json();
-                
-                if (data && data.status === "success" && data.members && data.members.length > 0) {
-                    allMembers = data.members;
-                    updateStats();
-                    filterMembers();
-                } else {
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
-                }
-            } catch (error) {
-                console.error("Erreur de chargement:", error);
-                document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur de connexion au serveur.</p>`;
+        function loadData() {
+            const oldScript = document.getElementById('jsonp-admin');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-admin';
+            script.src = `${SCRIPT_URL}?action=getmembers&callback=processAdminData&_=${new Date().getTime()}`;
+            document.body.appendChild(script);
+        }
+
+        window.processAdminData = function(response) {
+            if (response.status === "success" && response.members) {
+                allMembers = response.members;
+                updateStats(allMembers);
+                displayCards(allMembers);
+            } else {
+                document.getElementById('members-container').innerHTML = `<p style="text-align:center; color:red;">Erreur de chargement des données.</p>`;
             }
+        };
+
+        function updateStats(members) {
+            const total = members.length;
+            const presents = members.filter(m => (m.statut || "").toLowerCase().includes("présent") || (m.statut || "").toLowerCase().includes("present")).length;
+            const sortis = members.filter(m => (m.statut || "").toLowerCase().includes("sorti")).length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-presents').innerText = presents;
+            document.getElementById('stat-sortis').innerText = sortis;
         }
 
-        function updateStats() {
-            let inCount = 0;
-            let outCount = 0;
-
-            allMembers.forEach(m => {
-                let st = (m.statut || "").toString().trim().toLowerCase();
-                if (st.includes("présent") || st.includes("present")) inCount++;
-                if (st.includes("sorti")) outCount++;
-            });
-
-            document.getElementById("count-in").innerText = inCount;
-            document.getElementById("count-out").innerText = outCount;
-            document.getElementById("count-inscrits").innerText = allMembers.length;
-        }
-
-        function renderList(members) {
-            const container = document.getElementById("member-list");
+        function displayCards(members) {
+            const container = document.getElementById('members-container');
             if (members.length === 0) {
-                container.innerHTML = `<p style="text-align: center; color: #94a3b8; padding: 15px;">Aucun résultat</p>`;
+                container.innerHTML = `<p style="text-align: center; color: #64748b; padding: 20px;">Aucun membre trouvé.</p>`;
                 return;
             }
 
-            container.innerHTML = members.map(m => {
-                let nom = m.nom || "Membre";
-                let id = m.id || "";
-                let photo = (m.photoUrl && m.photoUrl.startsWith("http")) ? m.photoUrl : 'logo.png';
-                let st = (m.statut || "Inscrit").toString().trim();
-                let stLower = st.toLowerCase();
-                
-                let badgeClass = "inscrit";
-                if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
-                if (stLower.includes("sorti")) badgeClass = "sorti";
+            container.innerHTML = members.map((m, index) => {
+                let badgeClass = 'badge-inscrit';
+                const st = (m.statut || "").toLowerCase();
+                if (st.includes('présent') || st.includes('present')) badgeClass = 'badge-present';
+                else if (st.includes('sorti')) badgeClass = 'badge-sorti';
 
-                let heureClean = "";
-                if (m.heure) {
-                    let hStr = m.heure.toString().trim();
-                    let match = hStr.match(/(\d{1,2}:\d{2})/);
-                    if (match) {
-                        heureClean = match[1];
-                    }
-                }
-
-                let heureDisplay = heureClean ? `<span class="heure-text">${heureClean}</span>` : '';
+                const photo = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
 
                 return `
-                    <div class="member-item">
-                        <div class="member-left">
-                            <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
-                            <div class="member-details">
-                                <div class="member-name">${nom}</div>
-                                <div class="member-id">${id}</div>
+                    <div class="member-card" onclick="openModal(${index})">
+                        <div class="member-info">
+                            <img src="${photo}" class="member-avatar" onerror="this.src='logo.png'" alt="Avatar">
+                            <div>
+                                <div class="member-name">${m.nom}</div>
+                                <div class="member-id">${m.id}</div>
                             </div>
                         </div>
-                        <div class="member-right">
-                            <span class="status-badge ${badgeClass}">${st}</span>
-                            ${heureDisplay}
-                        </div>
+                        <span class="badge ${badgeClass}">${m.statut}</span>
                     </div>
                 `;
             }).join('');
         }
 
-        function filterMembers() {
-            const query = document.getElementById("search-input").value.toLowerCase().trim();
-            const filtered = allMembers.filter(m => {
-                let nom = (m.nom || "").toLowerCase();
-                let id = (m.id || "").toLowerCase();
-                return nom.includes(query) || id.includes(query);
-            });
-            renderList(filtered);
+        function openModal(index) {
+            // Recherche par rapport au filtre actuel ou direct
+            const m = allMembers[index];
+            if (!m) return;
+
+            document.getElementById('modal-photo').src = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
+            document.getElementById('modal-name').innerText = m.nom;
+            document.getElementById('modal-id').innerText = m.id;
+            document.getElementById('modal-email').innerText = m.email || "Non renseigné";
+            document.getElementById('modal-in').innerText = m.heureIn || m.heure || "--:--";
+            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
+            document.getElementById('modal-status').innerText = m.statut;
+
+            document.getElementById('modal').classList.add('active');
         }
 
-        fetchMembers();
-        setInterval(fetchMembers, 5000);
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function filterMembers() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filtered = allMembers.filter(m => m.nom.toLowerCase().includes(query) || m.id.toLowerCase().includes(query));
+            displayCards(filtered);
+        }
+
+        loadData();
     </script>
 </body>
 </html>
