@@ -41,7 +41,7 @@
             height: 120px;
             border-radius: 50%;
             margin: 10px auto 20px auto;
-            border: 4px solid #0066ff;
+            border: 4px solid #ff4757;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -62,8 +62,8 @@
             margin-bottom: 20px;
             line-height: 1.4;
         }
-        .alert-success { background-color: #0066ff; color: white; }
-        .alert-danger { background-color: #ff4757; color: white; }
+        .alert-success { background-color: #ff4757; color: white; }
+        .alert-danger { background-color: #e2e8f0; color: #1e293b; }
         .alert-info { background-color: #e2e8f0; color: #475569; }
         
         .heure-text {
@@ -81,6 +81,16 @@
             font-size: 15px;
             font-weight: 700;
             cursor: pointer;
+            margin-top: 10px;
+        }
+        .input-code {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 10px;
         }
         .screen { display: none; }
         .screen.active { display: block; }
@@ -94,7 +104,7 @@
 
         <!-- ÉCRAN 1 : Chargement -->
         <div id="screen-loading" class="screen active">
-            <div class="alert-box alert-info">Validation de la sortie...</div>
+            <div class="alert-box alert-info">Enregistrement de la sortie...</div>
         </div>
 
         <!-- ÉCRAN 2 : Succès Sortie -->
@@ -109,17 +119,18 @@
             <button class="btn" onclick="resetPage()">Terminer</button>
         </div>
 
-        <!-- ÉCRAN 3 : Erreur -->
+        <!-- ÉCRAN 3 : Saisie Manuelle / Erreur -->
         <div id="screen-error" class="screen">
-            <div class="alert-box alert-danger" id="error-message">Erreur lors de la validation.</div>
-            <button class="btn" onclick="resetPage()">Réessayer</button>
+            <div class="alert-box alert-danger" id="error-message">Aucun ID détecté.</div>
+            <input type="text" id="manual-id" class="input-code" placeholder="Saisir ou scanner un ID">
+            <button class="btn" onclick="validerSaisieManuelle()">Valider la Sortie</button>
+            <button class="btn" style="background-color: #64748b;" onclick="resetPage()">Réinitialiser</button>
         </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
 
-        // Convertit les liens Google Drive en URL d'image directe
         function convertDriveUrl(url) {
             if (!url || !url.startsWith("http")) return "logo.png";
             if (url.includes("drive.google.com")) {
@@ -153,13 +164,19 @@
         }
 
         function resetPage() {
-            window.location.reload();
+            window.location.href = window.location.pathname;
         }
 
-        // Validation du scan de sortie
+        function validerSaisieManuelle() {
+            const val = document.getElementById('manual-id').value;
+            if (val) {
+                validerSortie(val);
+            }
+        }
+
         function validerSortie(idScanne) {
-            if (!idScanne || idScanne.trim() === "") {
-                showErrorScreen("ID ou code QR invalide.");
+            if (!idScanne || idScanne.trim() === "" || idScanne === "undefined" || idScanne === "null") {
+                showErrorScreen("ID manquant ou invalide.");
                 return;
             }
 
@@ -169,6 +186,7 @@
             if (oldScript) oldScript.remove();
 
             const cleanId = idScanne.trim();
+            // Utilisation explicite de action=sortie
             const url = `${SCRIPT_URL}?action=sortie&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
 
             const script = document.createElement('script');
@@ -182,7 +200,6 @@
             document.body.appendChild(script);
         }
 
-        // Réception de la réponse du serveur
         window.handleScanResponse = function(response) {
             console.log("Réponse serveur :", response);
 
@@ -193,15 +210,20 @@
             }
         };
 
-        // Exécution automatique lors du scan (?id=...)
+        // Détection globale de tous les noms de paramètres URL possibles
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const scannedId = urlParams.get('id') || urlParams.get('code') || urlParams.get('qr');
+            const scannedId = urlParams.get('id') || 
+                              urlParams.get('code') || 
+                              urlParams.get('qr') || 
+                              urlParams.get('user') || 
+                              urlParams.get('member') || 
+                              urlParams.get('idUnique');
 
-            if (scannedId) {
+            if (scannedId && scannedId.trim() !== "") {
                 validerSortie(scannedId);
             } else {
-                showErrorScreen("Aucun ID détecté.");
+                showErrorScreen("Aucun ID trouvé dans l'URL. Veuillez le saisir ci-dessous :");
             }
         });
     </script>
