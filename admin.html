@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Inscrits - ASTER</title>
+    <title>Administration - ASTER</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f4f6f9;
             margin: 0;
-            padding: 20px 10px;
+            padding: 30px 15px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -70,9 +70,9 @@
         .card {
             background: white;
             border-radius: 20px;
-            padding: 20px;
+            padding: 20px 16px;
             width: 100%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.04);
         }
 
         /* Barre de Recherche */
@@ -93,18 +93,20 @@
 
         /* Liste Défilante */
         .member-list {
-            max-height: 420px;
+            max-height: 440px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            padding-right: 4px;
         }
         .member-list::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
+        }
+        .member-list::-webkit-scrollbar-track {
+            background: transparent;
         }
         .member-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
+            background: #94a3b8;
+            border-radius: 4px;
         }
 
         /* Élément Membre */
@@ -112,7 +114,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 12px 4px;
             border-bottom: 1px solid #f1f5f9;
         }
         .member-item:last-child {
@@ -124,10 +126,11 @@
             gap: 12px;
         }
         .member-photo {
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             object-fit: cover;
+            border: 1px solid #e2e8f0;
         }
         .member-details {
             display: flex;
@@ -144,7 +147,7 @@
             margin-top: 2px;
         }
 
-        /* Right side: Badge + Heure en petit */
+        /* Badges de Statut */
         .member-right {
             display: flex;
             flex-direction: column;
@@ -179,40 +182,49 @@
 <body>
 
     <div class="main-container">
+        <!-- Logo et Titre -->
         <img src="logo.png" alt="ASTER" class="logo">
         <h2>Liste des Inscrits</h2>
 
+        <!-- Pilules de Stats -->
         <div class="stats-container">
             <div class="stat-pill">In: <span class="badge-count bg-in" id="count-in">0</span></div>
             <div class="stat-pill">Out: <span class="badge-count bg-out" id="count-out">0</span></div>
             <div class="stat-pill">Inscrits: <span class="badge-count bg-inscrits" id="count-inscrits">0</span></div>
         </div>
 
+        <!-- Carte de recherche & liste -->
         <div class="card">
             <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
             
             <div class="member-list" id="member-list">
-                <p style="text-align: center; color: #94a3b8;">Chargement...</p>
+                <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
             </div>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/execc";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
         function fetchMembers() {
-            fetch(`${SCRIPT_URL}?action=getMembers`)
+            fetch(SCRIPT_URL)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.members) {
-                        allMembers = data.members;
+                    // Adaptabilité selon la structure renvoyée par le script
+                    const membersList = Array.isArray(data) ? data : (data.members || []);
+                    
+                    if (membersList.length > 0 || data.success) {
+                        allMembers = membersList;
                         updateStats();
                         renderList(allMembers);
+                    } else {
+                        document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
                     }
                 })
                 .catch(err => {
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444;">Erreur de chargement</p>`;
+                    console.error("Erreur de chargement:", err);
+                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur de chargement</p>`;
                 });
         }
 
@@ -221,8 +233,8 @@
             let outCount = 0;
 
             allMembers.forEach(m => {
-                let st = (m.statut || "").trim().toLowerCase();
-                if (st === "présent") inCount++;
+                let st = (m.statut || m.Statut || "").toString().trim().toLowerCase();
+                if (st === "présent" || st === "present") inCount++;
                 if (st === "sorti") outCount++;
             });
 
@@ -234,26 +246,31 @@
         function renderList(members) {
             const container = document.getElementById("member-list");
             if (members.length === 0) {
-                container.innerHTML = `<p style="text-align: center; color: #94a3b8;">Aucun résultat</p>`;
+                container.innerHTML = `<p style="text-align: center; color: #94a3b8; padding: 15px;">Aucun résultat</p>`;
                 return;
             }
 
             container.innerHTML = members.map(m => {
-                let st = (m.statut || "Inscrit").trim();
-                let badgeClass = "inscrit";
+                let nom = m.nom || m.Nom || "Inconnu";
+                let id = m.id || m.ID || m.code || "";
+                let photo = m.photoUrl || m.photo || 'logo.png';
+                let st = (m.statut || m.Statut || "Inscrit").toString().trim();
+                let stLower = st.toLowerCase();
                 
-                if (st.toLowerCase() === "présent") badgeClass = "present";
-                if (st.toLowerCase() === "sorti") badgeClass = "sorti";
+                let badgeClass = "inscrit";
+                if (stLower === "présent" || stLower === "present") badgeClass = "present";
+                if (stLower === "sorti") badgeClass = "sorti";
 
-                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
+                let heure = m.heure || m.Heure || m.Arrivée || m.Arrivee || "";
+                let heureDisplay = heure ? `<span class="heure-text">${heure}</span>` : '';
 
                 return `
                     <div class="member-item">
                         <div class="member-left">
-                            <img src="${m.photoUrl || 'logo.png'}" class="member-photo" alt="Photo">
+                            <img src="${photo}" class="member-photo" alt="Photo">
                             <div class="member-details">
-                                <div class="member-name">${m.nom}</div>
-                                <div class="member-id">${m.id}</div>
+                                <div class="member-name">${nom}</div>
+                                <div class="member-id">${id}</div>
                             </div>
                         </div>
                         <div class="member-right">
@@ -267,14 +284,15 @@
 
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
-            const filtered = allMembers.filter(m => 
-                m.nom.toLowerCase().includes(query) || 
-                m.id.toLowerCase().includes(query)
-            );
+            const filtered = allMembers.filter(m => {
+                let nom = (m.nom || m.Nom || "").toLowerCase();
+                let id = (m.id || m.ID || m.code || "").toLowerCase();
+                return nom.includes(query) || id.includes(query);
+            });
             renderList(filtered);
         }
 
-        // Chargement initial et rafraîchissement automatique toutes les 5 secondes
+        // Chargement initial + rafraîchissement toutes les 5 secondes
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
