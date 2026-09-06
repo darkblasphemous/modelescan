@@ -250,30 +250,6 @@
       document.body.appendChild(scriptTag);
     }
 
-    function formaterHeure(dateStr) {
-      if (!dateStr) return '';
-      
-      // Si la chaîne contient un 'T' (ex: 2026-09-05T14:30:00.000Z ou similaire)
-      if (typeof dateStr === 'string' && dateStr.includes('T')) {
-        const d = new Date(dateStr);
-        if (!isNaN(d.getTime())) {
-          return d.toLocaleTimeString('fr-FR', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            timeZone: 'Europe/Paris'
-          });
-        }
-      }
-
-      // Extraction directe par REGEX si le format contient HH:MM:SS
-      const match = String(dateStr).match(/(\d{2}):(\d{2})/);
-      if (match) {
-        return `${match[1]}:${match[2]}`;
-      }
-
-      return dateStr;
-    }
-
     function afficherMembres(liste) {
       const container = document.getElementById("membersList");
       if (liste.length === 0) {
@@ -285,11 +261,8 @@
         const photo = (m.photoUrl && m.photoUrl.length > 5) ? m.photoUrl : 'https://via.placeholder.com/36?text=?';
         
         let badgeClass = "attente";
-        let badgeText = m.statut || 'Inscrit';
         if (m.statut === "Présent") badgeClass = "present";
         if (m.statut === "Sorti") badgeClass = "sorti";
-
-        const heurePropre = formaterHeure(m.heure);
 
         return `
           <div class="member-item">
@@ -301,8 +274,8 @@
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="badge ${badgeClass}">${badgeText}</span>
-              <span style="font-size: 0.7em; color: #888; white-space: nowrap;">${heurePropre}</span>
+              <span class="badge ${badgeClass}">${m.statut || 'En attente'}</span>
+              <span style="font-size: 0.75em; color: #777;">${m.heure || ''}</span>
             </div>
           </div>
         `;
