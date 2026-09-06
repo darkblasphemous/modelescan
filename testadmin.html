@@ -248,17 +248,20 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // SÉCURITÉ ANTI- "Sat D" : On s'assure que l'heure ressemble bien à un format horaire (ex: contient un chiffre ou un ':' et ne contient pas de texte aberrant)
-                let heureValide = "";
-                if (m.heure && typeof m.heure === "string") {
-                    let hClean = m.heure.trim();
-                    // Vérifie que ce n'est pas un résidu de texte du genre "Sat" et qu'il y a au moins un chiffre ou un séparateur d'heure
-                    if (!hClean.toLowerCase().includes("sat") && (hClean.includes(":") || /\d/.test(hClean))) {
-                        heureValide = hClean;
+                // Extraction propre de l'heure sans bloquer les horaires valides
+                let heureClean = "";
+                if (m.heure) {
+                    let hStr = m.heure.toString().trim();
+                    if (hStr.includes(":")) {
+                        let parts = hStr.split(" ");
+                        let found = parts.find(p => p.includes(":"));
+                        heureClean = found ? found.substring(0, 5) : hStr.substring(0, 5);
+                    } else if (!hStr.toLowerCase().includes("sat") && !hStr.toLowerCase().includes("sun")) {
+                        heureClean = hStr;
                     }
                 }
 
-                let heureDisplay = heureValide ? `<span class="heure-text">${heureValide}</span>` : '';
+                let heureDisplay = heureClean ? `<span class="heure-text">${heureClean}</span>` : '';
 
                 return `
                     <div class="member-item">
