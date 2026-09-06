@@ -147,7 +147,7 @@
     </div>
 
     <script>
-        // Récupération immédiate et prioritaire de l'ID depuis l'URL de la page (ex: ?code=123 ou ?id=123)
+        // Récupération stricte de l'ID depuis l'URL de la page dès le début
         const urlParams = new URLSearchParams(window.location.search);
         let currentIdMembre = urlParams.get('code') || urlParams.get('id') || "";
 
@@ -155,7 +155,7 @@
             if (currentIdMembre) {
                 appelerAPI(currentIdMembre);
             } else {
-                console.warn("Aucun identifiant trouvé dans l'URL !");
+                console.error("ERREUR : Aucun identifiant (code ou id) trouvé dans l'URL !");
             }
         };
 
@@ -177,9 +177,11 @@
             const dynamicContent = document.getElementById('dynamic-content');
 
             if (response) {
-                // Si l'API renvoie un ID, on le met à jour, sinon on garde celui de l'URL
-                if (response.id || response.memberId || response.code) {
-                    currentIdMembre = response.id || response.memberId || response.code;
+                // On s'assure de récupérer un ID valide si l'API le renvoie, sinon on garde celui de l'URL
+                if (response.id && response.id !== "undefined") {
+                    currentIdMembre = response.id;
+                } else if (response.memberId && response.memberId !== "undefined") {
+                    currentIdMembre = response.memberId;
                 }
 
                 if (response.photoUrl) {
@@ -223,16 +225,15 @@
         }
 
         function ouvrirEnquete() {
-            // Double sécurité : si currentIdMembre est vide, on le reprend direct de l'URL
+            // Sécurité absolue : si l'ID est vide ou "undefined", on bloque et on prévient
             if (!currentIdMembre || currentIdMembre === "undefined") {
-                const paramsSecours = new URLSearchParams(window.location.search);
-                currentIdMembre = paramsSecours.get('code') || paramsSecours.get('id') || '';
+                alert("Erreur : Impossible de pré-remplir le formulaire car l'ID du membre est introuvable.");
+                return;
             }
 
-            // Génération de l'URL Google Forms pré-remplie
+            // Génération de l'URL du formulaire pré-rempli avec l'ID correct
             const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(currentIdMembre);
             
-            // Ouvre le formulaire dans un nouvel onglet avec l'ID injecté proprement
             window.open(urlFormulaire, "_blank");
         }
 
