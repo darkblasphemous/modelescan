@@ -6,81 +6,204 @@
     <title>Contrôle des Sorties - ASTER</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: white; padding: 40px 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; }
-        .logo { width: 110px; height: 110px; margin: 0 auto 15px auto; object-fit: contain; display: block; }
-        h2 { color: #1e293b; font-size: 22px; margin: 0 0 20px 0; font-weight: 700; }
-        .member-photo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #00c896; margin: 0 auto 20px auto; display: block; }
-        .status-box { padding: 20px 15px; border-radius: 14px; color: white; margin-bottom: 20px; }
-        .status-box.green { background-color: #00b4d8; }
-        .status-box.orange { background-color: #f97316; }
-        .status-box.red { background-color: #ef4444; }
-        .status-box p { margin: 0 0 5px 0; font-size: 15px; font-weight: bold; }
-        .status-box h3 { margin: 0; font-size: 20px; text-transform: uppercase; font-weight: 800; }
-        .btn-container { display: flex; gap: 10px; }
-        .btn { flex: 1; background-color: #0066ff; color: white; border: none; padding: 14px 10px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-block; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border-radius: 24px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #1e293b;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 20px 0;
+        }
+        .photo-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 10px auto 20px auto;
+            border: 4px solid #0066ff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+        }
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .alert-box {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .alert-success { background-color: #0066ff; color: white; }
+        .alert-danger { background-color: #ff4757; color: white; }
+        .alert-info { background-color: #e2e8f0; color: #475569; }
+        
+        .heure-text {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 6px;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background-color: #0066ff;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
     </style>
 </head>
 <body>
-    <div class="card" id="card-content">
-        <img src="logo.png" class="logo">
+
+    <div class="container">
+        <img src="logo.png" alt="ASTER" class="logo" onerror="this.style.display='none'">
         <h2>Contrôle des Sorties</h2>
-        <p>Validation en cours...</p>
+
+        <!-- ÉCRAN 1 : Chargement -->
+        <div id="screen-loading" class="screen active">
+            <div class="alert-box alert-info">Validation de la sortie...</div>
+        </div>
+
+        <!-- ÉCRAN 2 : Succès Sortie -->
+        <div id="screen-success" class="screen">
+            <div class="photo-container">
+                <img id="img-success" src="" alt="Photo" onerror="this.src='logo.png'">
+            </div>
+            <div class="alert-box alert-success">
+                <span id="name-success">Membre</span>
+                <div class="heure-text">Sortie enregistrée à : <span id="time-success">--:--</span></div>
+            </div>
+            <button class="btn" onclick="resetPage()">Terminer</button>
+        </div>
+
+        <!-- ÉCRAN 3 : Erreur -->
+        <div id="screen-error" class="screen">
+            <div class="alert-box alert-danger" id="error-message">Erreur lors de la validation.</div>
+            <button class="btn" onclick="resetPage()">Réessayer</button>
+        </div>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('id') || urlParams.get('code');
-        const container = document.getElementById("card-content");
 
-        if (!code) {
-            container.innerHTML = `
-                <img src="logo.png" class="logo">
-                <h2>Contrôle des Sorties</h2>
-                <div class="status-box red"><p>⚠️ Erreur : Identifiant manquant</p></div>
-            `;
-        } else {
-            fetch(`${SCRIPT_URL}?action=sortie&code=${encodeURIComponent(code)}`)
-                .then(res => res.json())
-                .then(data => {
-                    let photoHtml = data.photo ? `<img src="${data.photo}" class="member-photo">` : '';
-                    if (data.status === "ok") {
-                        container.innerHTML = `
-                            <img src="logo.png" class="logo">
-                            <h2>Contrôle des Sorties</h2>
-                            ${photoHtml}
-                            <div class="status-box green">
-                                <p>✓ SORTIE VALIDÉE</p>
-                                <h3>${data.name}</h3>
-                                <div style="font-size:12px; margin-top:5px;">ID : ${data.id}</div>
-                            </div>
-                            <button class="btn" style="width:100%" onclick="location.reload();">Scanner un autre</button>
-                        `;
-                    } else if (data.status === "require_survey") {
-                        container.innerHTML = `
-                            <img src="logo.png" class="logo">
-                            <h2>Contrôle des Sorties</h2>
-                            ${photoHtml}
-                            <div class="status-box orange">
-                                <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                                <h3>${data.name}</h3>
-                            </div>
-                            <div class="btn-container">
-                                <a href="${data.surveyUrl}" class="btn" target="_blank">Remplir l'enquête</a>
-                                <button class="btn" onclick="location.reload();">Scanner un autre</button>
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = `
-                            <img src="logo.png" class="logo">
-                            <h2>Contrôle des Sorties</h2>
-                            <div class="status-box red"><p>${data.message}</p></div>
-                            <button class="btn" style="width:100%" onclick="location.reload();">Réessayer</button>
-                        `;
-                    }
-                });
+        // Convertit les liens Google Drive en URL d'image directe
+        function convertDriveUrl(url) {
+            if (!url || !url.startsWith("http")) return "logo.png";
+            if (url.includes("drive.google.com")) {
+                let id = "";
+                const matchId = url.match(/\/d\/([^\/]+)/);
+                const matchQuery = url.match(/id=([^&]+)/);
+                if (matchId && matchId[1]) id = matchId[1];
+                else if (matchQuery && matchQuery[1]) id = matchQuery[1];
+                if (id) return `https://lh3.googleusercontent.com/d/${id}`;
+            }
+            return url;
         }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showLoadingScreen() { showScreen('screen-loading'); }
+
+        function showSuccessScreen(nom, photo, heure) {
+            document.getElementById('name-success').innerText = nom || "Membre";
+            document.getElementById('time-success').innerText = heure || "--:--";
+            document.getElementById('img-success').src = convertDriveUrl(photo);
+            showScreen('screen-success');
+        }
+
+        function showErrorScreen(msg) {
+            document.getElementById('error-message').innerText = msg;
+            showScreen('screen-error');
+        }
+
+        function resetPage() {
+            window.location.reload();
+        }
+
+        // Validation du scan de sortie
+        function validerSortie(idScanne) {
+            if (!idScanne || idScanne.trim() === "") {
+                showErrorScreen("ID ou code QR invalide.");
+                return;
+            }
+
+            showLoadingScreen();
+
+            const oldScript = document.getElementById('jsonp-scan-script');
+            if (oldScript) oldScript.remove();
+
+            const cleanId = idScanne.trim();
+            const url = `${SCRIPT_URL}?action=sortie&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-scan-script';
+            script.src = url;
+            
+            script.onerror = function() {
+                showErrorScreen("Erreur de connexion au serveur.");
+            };
+
+            document.body.appendChild(script);
+        }
+
+        // Réception de la réponse du serveur
+        window.handleScanResponse = function(response) {
+            console.log("Réponse serveur :", response);
+
+            if (response.status === "success") {
+                showSuccessScreen(response.nom, response.photoUrl, response.heure);
+            } else {
+                showErrorScreen(response.message || "Erreur lors de la validation.");
+            }
+        };
+
+        // Exécution automatique lors du scan (?id=...)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scannedId = urlParams.get('id') || urlParams.get('code') || urlParams.get('qr');
+
+            if (scannedId) {
+                validerSortie(scannedId);
+            } else {
+                showErrorScreen("Aucun ID détecté.");
+            }
+        });
     </script>
 </body>
 </html>
