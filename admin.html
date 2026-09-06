@@ -1,205 +1,4 @@
-<!-- ============================================================================ -->
-<!-- PROJET : APPLICATION D'ADMINISTRATION ET DE SUIVI DES MEMBRES (ASTER)       -->
-<!-- FICHIER : admin.html                                                        -->
-<!-- ============================================================================ -->
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration - ASTER</title>
-
-    <!-- ======================================================================== -->
-    <!-- DEBUT DE LA SECTION STYLES (CSS)                                         -->
-    <!-- ======================================================================== -->
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 30px 15px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-        }
-        .main-container {
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .logo {
-            width: 180px;
-            height: auto;
-            margin-bottom: 10px;
-            object-fit: contain;
-        }
-        h2 {
-            color: #1e293b;
-            font-size: 26px;
-            font-weight: 800;
-            margin: 0 0 15px 0;
-            text-align: center;
-        }
-        
-        /* Badges de comptage */
-        .stats-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .stat-pill {
-            background: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #1e293b;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .badge-count {
-            padding: 2px 8px;
-            border-radius: 12px;
-            color: white;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .bg-in { background-color: #00c896; }
-        .bg-out { background-color: #ef4444; }
-        .bg-inscrits { background-color: #0066ff; }
-
-        /* Carte principale de recherche et liste */
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px 16px;
-            width: 100%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.04);
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            outline: none;
-            margin-bottom: 15px;
-            color: #334155;
-            background-color: #fff;
-        }
-
-        .member-list {
-            max-height: 440px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .member-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 4px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .member-item:last-child {
-            border-bottom: none;
-        }
-        .member-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .member-photo {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
-        }
-        .member-details {
-            display: flex;
-            flex-direction: column;
-        }
-        .member-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        .member-id {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 2px;
-        }
-
-        .member-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .status-badge.present { background-color: #e6f9f4; color: #00c896; }
-        .status-badge.sorti { background-color: #feefef; color: #ef4444; }
-        .status-badge.inscrit { background-color: #f1f5f9; color: #94a3b8; }
-        .heure-text {
-            font-size: 9px;
-            color: #94a3b8;
-            margin-top: 3px;
-            font-weight: 500;
-        }
-    </style>
-    <!-- ======================================================================== -->
-    <!-- FIN DE LA SECTION STYLES (CSS)                                           -->
-    <!-- ======================================================================== -->
-</head>
-<body>
-
-    <!-- ======================================================================== -->
-    <!-- DEBUT DU CONTENU HTML (INTERFACE UTILISATEUR)                           -->
-    <!-- ======================================================================== -->
-    <div class="main-container">
-        <img src="logo.png" alt="ASTER" class="logo">
-        <h2>Administration</h2>
-
-        <!-- Statistiques d'effectifs -->
-        <div class="stats-container">
-            <div class="stat-pill">In: <span class="badge-count bg-in" id="count-in">0</span></div>
-            <div class="stat-pill">Out: <span class="badge-count bg-out" id="count-out">0</span></div>
-            <div class="stat-pill">Inscrits: <span class="badge-count bg-inscrits" id="count-inscrits">0</span></div>
-        </div>
-
-        <!-- Bloc de recherche et conteneur de la liste -->
-        <div class="card">
-            <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
-            
-            <div class="member-list" id="member-list">
-                <p style="text-align: center; color: #94a3b8; padding: 15px;">Chargement des données...</p>
-            </div>
-        </div>
-    </div>
-    <!-- ======================================================================== -->
-    <!-- FIN DU CONTENU HTML                                                      -->
-    <!-- ======================================================================== -->
-
-
-    <!-- ======================================================================== -->
-    <!-- DEBUT DE LA SECTION SCRIPTS (JAVASCRIPT)                                 -->
-    <!-- ======================================================================== -->
-    <script>
+<script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
         let allMembers = [];
 
@@ -212,7 +11,7 @@
 
             const script = document.createElement('script');
             script.id = 'jsonp-script';
-            script.src = `${SCRIPT_URL}?action=getMembers&callback=handleResponse&_=` + new Date().getTime();
+            script.src = `${SCRIPT_URL}?action=getmembers&callback=handleResponse&_=` + new Date().getTime();
             document.body.appendChild(script);
         }
 
@@ -220,10 +19,10 @@
         // FONCTION : Traitement de la réponse retournée par Google Apps Script
         // ----------------------------------------------------------------------
         window.handleResponse = function(data) {
-            if (data && data.members && data.members.length > 0) {
+            if (data && data.status === "success" && data.members && data.members.length > 0) {
                 allMembers = data.members;
                 updateStats();
-                renderList(allMembers);
+                filterMembers(); // Applique le filtre actuel (ou affiche tout si la recherche est vide)
             } else {
                 document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
             }
@@ -307,13 +106,3 @@
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
-    <!-- ======================================================================== -->
-    <!-- FIN DE LA SECTION SCRIPTS                                                -->
-    <!-- ======================================================================== -->
-
-</body>
-</html>
-
-<!-- ============================================================================ -->
-<!-- FIN DU FICHIER : admin.html                                                 -->
-<!-- ============================================================================ -->
