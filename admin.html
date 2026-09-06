@@ -1,3 +1,6 @@
+<!-- ========================================== -->
+<!-- DEBUT DU FICHIER : admin.html              -->
+<!-- ========================================== -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -37,6 +40,7 @@
             text-align: center;
         }
         
+        /* Stats Header */
         .stats-container {
             display: flex;
             gap: 10px;
@@ -65,6 +69,7 @@
         .bg-out { background-color: #ef4444; }
         .bg-inscrits { background-color: #0066ff; }
 
+        /* Card Container */
         .card {
             background: white;
             border-radius: 20px;
@@ -95,13 +100,10 @@
             flex-direction: column;
         }
         .member-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        .member-list::-webkit-scrollbar-track {
-            background: transparent;
+            width: 6px;
         }
         .member-list::-webkit-scrollbar-thumb {
-            background: #94a3b8;
+            background: #cbd5e1;
             border-radius: 4px;
         }
 
@@ -199,16 +201,12 @@
         let allMembers = [];
 
         function fetchMembers() {
-            // Utilisation exacte de la requête action=getMembers
-            fetch(`${SCRIPT_URL}?action=getMembers`)
+            fetch(SCRIPT_URL)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.members) {
-                        allMembers = data.members;
-                        updateStats();
-                        renderList(allMembers);
-                    } else if (Array.isArray(data)) {
-                        allMembers = data;
+                    const list = data.members || (Array.isArray(data) ? data : []);
+                    if (list.length > 0) {
+                        allMembers = list;
                         updateStats();
                         renderList(allMembers);
                     } else {
@@ -217,7 +215,7 @@
                 })
                 .catch(err => {
                     console.error("Erreur:", err);
-                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur de chargement</p>`;
+                    document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#ef4444; padding: 15px;">Erreur lors du chargement.</p>`;
                 });
         }
 
@@ -226,7 +224,7 @@
             let outCount = 0;
 
             allMembers.forEach(m => {
-                let st = (m.statut || m.Statut || "").toString().trim().toLowerCase();
+                let st = (m.statut || "").toString().trim().toLowerCase();
                 if (st === "présent" || st === "present") inCount++;
                 if (st === "sorti") outCount++;
             });
@@ -244,23 +242,22 @@
             }
 
             container.innerHTML = members.map(m => {
-                let nom = m.nom || m.Nom || "Inconnu";
-                let id = m.id || m.ID || m.code || "";
-                let photo = m.photoUrl || m.photo || 'logo.png';
-                let st = (m.statut || m.Statut || "Inscrit").toString().trim();
+                let nom = m.nom || "Inconnu";
+                let id = m.id || "";
+                let photo = m.photoUrl || 'logo.png';
+                let st = (m.statut || "Inscrit").toString().trim();
                 let stLower = st.toLowerCase();
                 
                 let badgeClass = "inscrit";
                 if (stLower === "présent" || stLower === "present") badgeClass = "present";
                 if (stLower === "sorti") badgeClass = "sorti";
 
-                let heure = m.heure || m.Heure || m.Arrivée || m.Arrivee || "";
-                let heureDisplay = heure ? `<span class="heure-text">${heure}</span>` : '';
+                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
 
                 return `
                     <div class="member-item">
                         <div class="member-left">
-                            <img src="${photo}" class="member-photo" alt="Photo">
+                            <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
                             <div class="member-details">
                                 <div class="member-name">${nom}</div>
                                 <div class="member-id">${id}</div>
@@ -278,8 +275,8 @@
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
             const filtered = allMembers.filter(m => {
-                let nom = (m.nom || m.Nom || "").toLowerCase();
-                let id = (m.id || m.ID || m.code || "").toLowerCase();
+                let nom = (m.nom || "").toLowerCase();
+                let id = (m.id || "").toLowerCase();
                 return nom.includes(query) || id.includes(query);
             });
             renderList(filtered);
@@ -290,3 +287,6 @@
     </script>
 </body>
 </html>
+<!-- ========================================== -->
+<!-- FIN DU FICHIER : admin.html                -->
+<!-- ========================================== -->
