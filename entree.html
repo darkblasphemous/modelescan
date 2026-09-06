@@ -9,6 +9,8 @@
   <meta name="theme-color" content="#f4f6f9">
 
   <title>Contrôle des Entrées - ASTER</title>
+  
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
     * {
@@ -29,16 +31,16 @@
     .card-container {
       max-width: 440px;
       width: 100%;
-      margin: 20px auto;
+      margin: 10px auto;
       background: #ffffff;
-      border-radius: 20px;
-      padding: 30px 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     .logo-container {
-      margin: 0 auto 15px auto;
-      max-width: 120px;
+      margin: 0 auto 10px auto;
+      max-width: 140px;
       width: 100%;
     }
     
@@ -51,132 +53,56 @@
 
     h2 {
       color: #2d3748;
-      margin: 5px 0 20px 0;
+      margin: 5px 0 15px 0;
       font-size: 1.35em;
       font-weight: 700;
     }
 
-    /* Style pour la jauge de progression interactive */
-    .progress-bar-container {
+    .scanner-wrapper {
+      position: relative;
       width: 100%;
-      height: 8px;
-      background-color: #e2e8f0;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 15px 0 5px 0;
-      display: none;
-    }
-
-    .progress-bar-fill {
-      width: 0%;
-      height: 100%;
-      background-color: #007bff;
-      border-radius: 4px;
-      transition: width 0.4s ease;
-      animation: pulse-bar 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse-bar {
-      0% { opacity: 0.6; }
-      50% { opacity: 1; }
-      100% { opacity: 0.6; }
-    }
-
-    .user-photo-container {
-      margin: 20px auto;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      padding: 4px;
-      background: #ffffff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-      border: 3px solid #00b894;
-      display: none;
-    }
-
-    .user-photo-container img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .status-box {
-      margin: 20px 0;
-      padding: 22px 15px;
       border-radius: 12px;
+      overflow: hidden;
+      background: #1a202c;
+    }
+
+    #reader {
+      width: 100%;
+      border: none;
+    }
+
+    #reader video {
+      object-fit: cover !important;
+      border-radius: 12px;
+    }
+
+    .subtitle {
+      color: #718096;
+      font-size: 0.85em;
+      margin-top: 15px;
+      margin-bottom: 0;
+    }
+
+    .status-msg {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9em;
       text-align: center;
       display: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
       font-weight: bold;
-      color: #ffffff;
-    }
-
-    .status-loading {
-      background-color: #ebf8ff;
-      color: #2b6cb0;
-      border: 1px solid #bee3f8;
-      display: block;
-      font-weight: normal;
     }
 
     .status-success {
-      background-color: #00b074;
-    }
-
-    .status-warning {
-      background-color: #ff7f27;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
     }
 
     .status-error {
-      background-color: #e53e3e;
-    }
-
-    .msg-title {
-      font-size: 1.05em;
-      letter-spacing: 0.3px;
-      margin-bottom: 8px;
-    }
-
-    .msg-name {
-      font-size: 1.3em;
-      text-transform: uppercase;
-      margin-top: 6px;
-      font-weight: 800;
-    }
-
-    .msg-time {
-      font-size: 0.85em;
-      font-weight: 400;
-      opacity: 0.9;
-      margin-top: 6px;
-    }
-
-    .btn-action {
-      display: block;
-      width: 100%;
-      margin-top: 12px;
-      padding: 14px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      text-decoration: none;
-      box-shadow: 0 4px 10px rgba(0,123,255,0.2);
-      transition: background-color 0.2s;
-    }
-
-    .btn-action:hover {
-      background-color: #0056b3;
-    }
-
-    .btn-container {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
   </style>
 </head>
@@ -189,111 +115,63 @@
 
     <h2>Contrôle des Entrées</h2>
 
-    <div class="progress-bar-container" id="progressBarContainer">
-      <div class="progress-bar-fill" id="progressBarFill"></div>
+    <div class="scanner-wrapper">
+      <div id="reader"></div>
     </div>
 
-    <div class="user-photo-container" id="photoContainer">
-      <img id="userPhoto" src="" alt="Photo membre">
-    </div>
+    <p class="subtitle">Scannez le badge du membre pour valider l'entrée</p>
 
-    <div id="statusMsg" class="status-box status-loading">Scannez le badge du membre pour valider l'entrée</div>
-
-    <div class="btn-container" id="actionButtons">
-      <button class="btn-action" onclick="window.close()">Fermer / Terminer</button>
-    </div>
+    <div id="statusMsg" class="status-msg"></div>
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA5stBpwFQ2eTiCemzj7_MGC3_nd6GXHd01MzamvHU7fFa0-h8bN3Zplird76PNV3c/exec";
     const ACTION = "entree";
+    
+    let html5QrCode = null;
+    let isProcessing = false;
 
-    function afficherResultat(titre, nom, idMembre, heureTexte, type, photoUrl) {
+    function afficherMessage(txt, error = false) {
       const msgBox = document.getElementById("statusMsg");
-      const photoContainer = document.getElementById("photoContainer");
-      const userPhoto = document.getElementById("userPhoto");
-      const progressContainer = document.getElementById("progressBarContainer");
-      const progressFill = document.getElementById("progressBarFill");
-
-      if (!msgBox) return;
-
       msgBox.style.display = "block";
-      msgBox.className = "status-box";
+      msgBox.className = "status-msg " + (error ? "status-error" : "status-success");
+      msgBox.innerText = txt;
+    }
 
-      if (type === "loading") {
-        if (progressContainer && progressFill) {
-          progressContainer.style.display = "block";
-          progressFill.style.width = "75%";
-        }
-        msgBox.classList.add("status-loading");
-        msgBox.innerText = titre;
-        return;
-      } else {
-        if (progressContainer && progressFill) {
-          progressFill.style.width = "100%";
-          setTimeout(() => { progressContainer.style.display = "none"; }, 300);
-        }
-      }
+    function onScanSuccess(decodedText) {
+      if (isProcessing) return;
+      isProcessing = true;
 
-      if (type === "success") {
-        msgBox.classList.add("status-success");
-      } else if (type === "warning") {
-        msgBox.classList.add("status-warning");
-      } else if (type === "error") {
-        msgBox.classList.add("status-error");
-      }
+      afficherMessage("Validation en cours...", false);
 
-      let heureHtml = heureTexte ? `<div class="msg-time">Heure : ${heureTexte}</div>` : '';
-      msgBox.innerHTML = `
-        <div class="msg-title">${titre}</div>
-        <div class="msg-name">${nom}</div>
-        ${heureHtml}
-      `;
+      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(decodedText)}`;
 
-      if (photoContainer && userPhoto) {
-        if (photoUrl && photoUrl.trim() !== "" && photoUrl.length > 5) {
-          userPhoto.src = photoUrl;
-          photoContainer.style.display = "block";
-        } else {
-          photoContainer.style.display = "none";
-        }
-      }
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "ok") {
+            afficherMessage(`✅ Entrée validée : ${data.name}`);
+          } else {
+            afficherMessage(`❌ ${data.message}`, true);
+          }
+        })
+        .catch(() => afficherMessage("❌ Erreur de connexion au serveur", true))
+        .finally(() => {
+          setTimeout(() => { isProcessing = false; }, 2500);
+        });
     }
 
     window.addEventListener("load", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const memberId = urlParams.get('id') || urlParams.get('code');
+      html5QrCode = new Html5Qrcode("reader");
+      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
 
-      if (!memberId) {
-        afficherResultat("❌ ERREUR", "Aucun identifiant", "Inconnu", "", "error", "");
-        return;
-      }
-
-      afficherResultat("Validation en cours...", "", memberId, "", "loading", "");
-
-      const url = `${SCRIPT_URL}?action=${ACTION}&code=${encodeURIComponent(memberId)}`;
-
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error("Erreur réseau");
-          return res.json();
-        })
-        .then(data => {
-          const nomMembre = data.name || memberId;
-          const nowTime = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-          if (data.status === "ok") {
-            afficherResultat("✓ ENTRÉE VALIDÉE", nomMembre, memberId, nowTime, "success", data.photo);
-          } else if (data.status === "already_scanned") {
-            afficherResultat("⚠ " + nomMembre + " est déjà enregistré comme présent !", "", memberId, nowTime, "warning", data.photo);
-          } else {
-            afficherResultat("❌ ERREUR", data.message || "Problème d'accès", memberId, "", "error", data.photo);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          afficherResultat("❌ ERREUR", "Impossible de joindre le serveur", memberId, "", "error", "");
-        });
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess
+      ).catch(err => {
+        afficherMessage("❌ Impossible d'accéder à la caméra", true);
+      });
     });
   </script>
 </body>
