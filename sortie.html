@@ -126,17 +126,14 @@
 <body>
 
     <div class="container">
-        <!-- Logo intégré -->
         <img src="logo.png" alt="Logo ASTER" class="logo">
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- Avatar avec une image neutre sécurisée -->
         <div class="avatar-container">
             <img id="member-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3C/svg%3E" alt="" class="avatar">
         </div>
 
-        <!-- Zone dynamique gérée par le script -->
         <div id="dynamic-content">
             <div class="alert-box-success">
                 <p>✓ EN ATTENTE DE SCAN</p>
@@ -150,6 +147,9 @@
     </div>
 
     <script>
+        // Variable globale pour stocker l'ID du membre récupéré
+        let currentIdMembre = "";
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const codeMembre = urlParams.get('code') || urlParams.get('id');
@@ -160,7 +160,6 @@
         };
 
         function appelerAPI(code) {
-            // URL de déploiement Apps Script intégrée
             const urlAppsScript = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec?action=sortie&code=" + encodeURIComponent(code);
 
             fetch(urlAppsScript)
@@ -177,55 +176,59 @@
             const avatarImg = document.getElementById('member-avatar');
             const dynamicContent = document.getElementById('dynamic-content');
 
-            if (response && response.photoUrl) {
-                avatarImg.src = response.photoUrl;
-            }
+            if (response) {
+                // Sauvegarde de l'ID globalement (selon le retour de ton script Apps Script)
+                currentIdMembre = response.id || new URLSearchParams(window.location.search).get('code') || "";
 
-            if (response && response.status === "require_survey") {
-                dynamicContent.innerHTML = `
-                    <div class="alert-box-orange">
-                        <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
-                        <strong>${response.nom}</strong>
-                    </div>
-                    <div class="buttons-group">
-                        <button class="btn btn-primary" onclick="ouvrirEnquete('${response.id}')">Remplir l'enquête</button>
-                        <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
-                    </div>
-                `;
-            } else if (response && response.status === "success") {
-                dynamicContent.innerHTML = `
-                    <div class="alert-box-success">
-                        <p>✓ SORTIE VALIDÉE</p>
-                        <span class="member-name">${response.nom}</span>
-                        <span class="member-id">ID : ${response.id}</span>
-                    </div>
-                    <div class="buttons-group">
-                        <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
-                    </div>
-                `;
-            } else if (response && response.status === "error") {
-                dynamicContent.innerHTML = `
-                    <div class="alert-box-orange">
-                        <p>⚠️ Erreur</p>
-                        <strong>${response.message}</strong>
-                    </div>
-                    <div class="buttons-group">
-                        <button class="btn btn-primary" onclick="nouveauScan()">Réessayer</button>
-                    </div>
-                `;
+                if (response.photoUrl) {
+                    avatarImg.src = response.photoUrl;
+                }
+
+                if (response.status === "require_survey") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-orange">
+                            <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                            <strong>${response.nom}</strong>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="ouvrirEnquete()">Remplir l'enquête</button>
+                            <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                        </div>
+                    `;
+                } else if (response.status === "success") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-success">
+                            <p>✓ SORTIE VALIDÉE</p>
+                            <span class="member-name">${response.nom}</span>
+                            <span class="member-id">ID : ${currentIdMembre}</span>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                        </div>
+                    `;
+                } else if (response.status === "error") {
+                    dynamicContent.innerHTML = `
+                        <div class="alert-box-orange">
+                            <p>⚠️ Erreur</p>
+                            <strong>${response.message}</strong>
+                        </div>
+                        <div class="buttons-group">
+                            <button class="btn btn-primary" onclick="nouveauScan()">Réessayer</button>
+                        </div>
+                    `;
+                }
             }
         }
 
-        function ouvrirEnquete(idMembre) {
-            // Récupération sécurisée de l'ID (paramètre ou fallback direct sur l'URL de la page si besoin)
-            let idFinal = idMembre;
-            if (!idFinal || idFinal === "undefined") {
+        function ouvrirEnquete() {
+            // Utilise l'ID stocké globalement ou le récupère de l'URL en secours
+            if (!currentIdMembre) {
                 const urlParams = new URLSearchParams(window.location.search);
-                idFinal = urlParams.get('code') || urlParams.get('id') || '';
+                currentIdMembre = urlParams.get('code') || urlParams.get('id') || '';
             }
 
-            // URL du formulaire Google Forms avec l'ID injecté dans entry.648947853
-            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(idFinal);
+            // URL du formulaire Google Forms avec ton entry.648947853 injecté proprement
+            const urlFormulaire = "https://docs.google.com/forms/d/e/1FAIpQLSfUnuzd5qiYa17ay-Nddn1CtpKUGv8-h3CLnqQZH5cBs5vjJg/viewform?usp=pp_url&entry.648947853=" + encodeURIComponent(currentIdMembre);
             window.open(urlFormulaire, "_blank");
         }
 
