@@ -78,12 +78,34 @@
             opacity: 0.95;
             letter-spacing: 0.3px;
         }
+        .alert-box-orange {
+            background-color: #f97316;
+            color: white;
+            padding: 22px 20px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            text-align: center;
+        }
+        .alert-box-orange p {
+            margin: 0 0 6px 0;
+            font-size: 14.5px;
+            font-weight: 500;
+        }
+        .alert-box-orange strong {
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: block;
+            margin-top: 5px;
+        }
         .buttons-group {
             display: flex;
+            gap: 12px;
             justify-content: center;
         }
         .btn {
-            width: 100%;
+            flex: 1;
             padding: 14px 10px;
             border: none;
             border-radius: 10px;
@@ -108,20 +130,14 @@
         
         <h2>Contrôle des Sorties</h2>
 
-        <!-- On met directement la photo par défaut pour éviter le bug d'affichage -->
+        <!-- Avatar du Membre (src vide au départ pour éviter les images parasites) -->
         <div class="avatar-container">
-            <img id="member-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300" alt="" class="avatar">
+            <img id="member-avatar" src="" alt="Photo membre" class="avatar">
         </div>
 
+        <!-- Zone dynamique gérée entièrement par votre script -->
         <div id="dynamic-content">
-            <div class="alert-box-success">
-                <p>✓ SORTIE VALIDÉE</p>
-                <span class="member-name">alan wilder</span>
-                <span class="member-id">ID : ASTER-EVENEMENT2026-001</span>
-            </div>
-            <div class="buttons-group">
-                <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
-            </div>
+            <p style="color: #64748b; font-size: 14px;">En attente de scan...</p>
         </div>
     </div>
 
@@ -130,11 +146,26 @@
             const avatarImg = document.getElementById('member-avatar');
             const dynamicContent = document.getElementById('dynamic-content');
 
+            // Intégration dynamique de la vraie photo du membre scanné
             if (response.photoUrl) {
                 avatarImg.src = response.photoUrl;
             }
 
-            if (response.status === "success") {
+            // Si l'enquête est requise
+            if (response.status === "require_survey") {
+                dynamicContent.innerHTML = `
+                    <div class="alert-box-orange">
+                        <p>⚠️ Veuillez remplir l'enquête de satisfaction avant de sortir.</p>
+                        <strong>${response.nom}</strong>
+                    </div>
+                    <div class="buttons-group">
+                        <button class="btn btn-primary" onclick="ouvrirEnquete('${response.id}')">Remplir l'enquête</button>
+                        <button class="btn btn-primary" onclick="nouveauScan()">Scanner un autre</button>
+                    </div>
+                `;
+            } 
+            // Si la sortie est validée avec succès
+            else if (response.status === "success") {
                 dynamicContent.innerHTML = `
                     <div class="alert-box-success">
                         <p>✓ SORTIE VALIDÉE</p>
@@ -146,6 +177,10 @@
                     </div>
                 `;
             }
+        }
+
+        function ouvrirEnquete(idMembre) {
+            window.open("https://docs.google.com/forms/d/e/VOTRE_FORMULAIRE/viewform?entry.ID=" + idMembre, "_blank");
         }
 
         function nouveauScan() {
