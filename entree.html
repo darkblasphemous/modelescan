@@ -1,54 +1,317 @@
-// ----------------------------------------------------------------------
-// FONCTION : Validation du scan d'entrée
-// ----------------------------------------------------------------------
-function validerEntree(idScanne) {
-    // Vérification de sécurité locale
-    if (!idScanne || idScanne.trim() === "") {
-        showErrorScreen("Code QR ou ID invalide.");
-        return;
-    }
+<!-- ============================================================================ -->
+<!-- PROJET : APPLICATION DE GESTION ET SUIVI DES MEMBRES (ASTER)                -->
+<!-- FICHIER : entree.html (Contrôle des Entrées)                                 -->
+<!-- ============================================================================ -->
 
-    // Afficher l'écran de chargement
-    showLoadingScreen();
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle des Entrées - ASTER</title>
 
-    // Nettoyage des anciens scripts JSONP
-    const oldScript = document.getElementById('jsonp-scan-script');
-    if (oldScript) oldScript.remove();
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION STYLES (CSS)                                         -->
+    <!-- ======================================================================== -->
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border-radius: 24px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo {
+            width: 140px;
+            height: auto;
+            margin-bottom: 15px;
+            object-fit: contain;
+        }
+        h2 {
+            color: #1e293b;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 20px 0;
+        }
 
-    // Construction propre de l'URL avec action=entree
-    const cleanId = idScanne.trim();
-    const url = `${SCRIPT_URL}?action=entree&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
+        /* Cadre de la photo de profil */
+        .photo-container {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 10px auto 20px auto;
+            border: 4px solid #00c896;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+        }
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-    // Création et injection du script
-    const script = document.createElement('script');
-    script.id = 'jsonp-scan-script';
-    script.src = url;
-    
-    script.onerror = function() {
-        showErrorScreen("Erreur de connexion au serveur.");
-    };
+        /* Cartes de messages d'état */
+        .alert-box {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .alert-success {
+            background-color: #00c896;
+            color: white;
+        }
+        .alert-warning {
+            background-color: #ff7e1d;
+            color: white;
+        }
+        .alert-danger {
+            background-color: #ff4757;
+            color: white;
+        }
+        .alert-info {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
 
-    document.body.appendChild(script);
-}
+        .heure-text {
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 6px;
+            opacity: 0.95;
+        }
 
-// ----------------------------------------------------------------------
-// FONCTION : Réception de la réponse du serveur
-// ----------------------------------------------------------------------
-window.handleScanResponse = function(response) {
-    console.log("Réponse serveur :", response);
+        /* Bouton principal */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background-color: #0066ff;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #0052cc;
+        }
 
-    if (response.status === "success") {
-        // Entrée validée avec succès !
-        let photo = convertDriveUrl(response.photoUrl);
-        showSuccessScreen(response.nom, photo, response.heure);
+        /* Écrans dynamiques */
+        .screen {
+            display: none;
+            width: 100%;
+        }
+        .screen.active {
+            display: block;
+        }
+    </style>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION STYLES (CSS)                                           -->
+    <!-- ======================================================================== -->
+</head>
+<body>
 
-    } else if (response.status === "already_in") {
-        // Déjà enregistré comme présent
-        let photo = convertDriveUrl(response.photoUrl);
-        showAlreadyInScreen(response.nom, photo, response.heure);
+    <!-- ======================================================================== -->
+    <!-- DEBUT DU CONTENU HTML (INTERFACE UTILISATEUR)                           -->
+    <!-- ======================================================================== -->
+    <div class="container">
+        <img src="logo.png" alt="ASTER" class="logo">
+        <h2>Contrôle des Entrées</h2>
 
-    } else {
-        // Erreur (ex: ID non trouvé)
-        showErrorScreen(response.message || "Erreur lors de la validation.");
-    }
-};
+        <!-- ECRAN 1 : Attente / Chargement -->
+        <div id="screen-loading" class="screen active">
+            <div class="alert-box alert-info">
+                Validation en cours...
+            </div>
+        </div>
+
+        <!-- ECRAN 2 : Entrée Validée avec Succès -->
+        <div id="screen-success" class="screen">
+            <div class="photo-container">
+                <img id="img-success" src="logo.png" alt="Photo" onerror="this.onerror=null; this.src='logo.png';">
+            </div>
+            <div class="alert-box alert-success">
+                <span id="name-success">Nom Membre</span>
+                <div class="heure-text">Entrée enregistrée à : <span id="time-success">--:--</span></div>
+            </div>
+            <button class="btn" onclick="resetForm()">Fermer / Terminer</button>
+        </div>
+
+        <!-- ECRAN 3 : Déjà Enregistré comme Présent -->
+        <div id="screen-already" class="screen">
+            <div class="photo-container" style="border-color: #ff7e1d;">
+                <img id="img-already" src="logo.png" alt="Photo" onerror="this.onerror=null; this.src='logo.png';">
+            </div>
+            <div class="alert-box alert-warning">
+                ⚠️ <span id="name-already">Nom Membre</span> est déjà enregistré comme présent !
+                <div class="heure-text">Heure : <span id="time-already">--:--</span></div>
+            </div>
+            <button class="btn" onclick="resetForm()">Fermer / Terminer</button>
+        </div>
+
+        <!-- ECRAN 4 : Erreur -->
+        <div id="screen-error" class="screen">
+            <div class="alert-box alert-danger" id="error-message">
+                Une erreur est survenue.
+            </div>
+            <button class="btn" onclick="resetForm()">Réessayer</button>
+        </div>
+    </div>
+    <!-- ======================================================================== -->
+    <!-- FIN DU CONTENU HTML                                                      -->
+    <!-- ======================================================================== -->
+
+
+    <!-- ======================================================================== -->
+    <!-- DEBUT DE LA SECTION SCRIPTS (JAVASCRIPT)                                 -->
+    <!-- ======================================================================== -->
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6dNuSW3ZwXRVIf9ppIeFe-ZT3_UvzDH5bN1BEYA-NGGf1Qxw0OYT9Efx6p7NRyqG5/exec";
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Conversion d'URL Google Drive vers lien direct d'image
+        // ----------------------------------------------------------------------
+        function convertDriveUrl(url) {
+            if (!url || !url.startsWith("http")) return "logo.png";
+            
+            if (url.includes("drive.google.com")) {
+                let id = "";
+                const matchId = url.match(/\/d\/([^\/]+)/);
+                const matchQuery = url.match(/id=([^&]+)/);
+                
+                if (matchId && matchId[1]) {
+                    id = matchId[1];
+                } else if (matchQuery && matchQuery[1]) {
+                    id = matchQuery[1];
+                }
+
+                if (id) {
+                    return `https://lh3.googleusercontent.com/d/${id}`;
+                }
+            }
+            return url;
+        }
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Gestion de l'affichage des écrans
+        // ----------------------------------------------------------------------
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Validation du scan d'entrée
+        // ----------------------------------------------------------------------
+        function validerEntree(idScanne) {
+            if (!idScanne || idScanne.trim() === "") {
+                showErrorScreen("Code QR ou ID invalide.");
+                return;
+            }
+
+            showScreen('screen-loading');
+
+            // Nettoyage des anciens scripts JSONP
+            const oldScript = document.getElementById('jsonp-scan-script');
+            if (oldScript) oldScript.remove();
+
+            // Construction de l'URL avec action=entree et l'id nettoyé
+            const cleanId = idScanne.trim();
+            const url = `${SCRIPT_URL}?action=entree&id=${encodeURIComponent(cleanId)}&callback=handleScanResponse&_=${new Date().getTime()}`;
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-scan-script';
+            script.src = url;
+            
+            script.onerror = function() {
+                showErrorScreen("Erreur de connexion au serveur.");
+            };
+
+            document.body.appendChild(script);
+        }
+
+        // ----------------------------------------------------------------------
+        // FONCTION : Traitement de la réponse transmise par Google Apps Script
+        // ----------------------------------------------------------------------
+        window.handleScanResponse = function(response) {
+            console.log("Réponse serveur :", response);
+
+            if (response.status === "success") {
+                document.getElementById('name-success').innerText = response.nom || "Membre";
+                document.getElementById('time-success').innerText = response.heure || "--:--";
+                document.getElementById('img-success').src = convertDriveUrl(response.photoUrl);
+                showScreen('screen-success');
+
+            } else if (response.status === "already_in") {
+                document.getElementById('name-already').innerText = response.nom || "Membre";
+                document.getElementById('time-already').innerText = response.heure || "--:--";
+                document.getElementById('img-already').src = convertDriveUrl(response.photoUrl);
+                showScreen('screen-already');
+
+            } else {
+                showErrorScreen(response.message || "ID non trouvé dans la base de données.");
+            }
+        };
+
+        // ----------------------------------------------------------------------
+        // FONCTIONS D'AFFICHAGE D'ERREUR ET REINITIALISATION
+        // ----------------------------------------------------------------------
+        function showErrorScreen(msg) {
+            document.getElementById('error-message').innerText = msg;
+            showScreen('screen-error');
+        }
+
+        function resetForm() {
+            showScreen('screen-loading');
+            // Si la page est rechargée ou prête pour un nouveau scan
+            window.location.reload();
+        }
+
+        // ----------------------------------------------------------------------
+        // DÉTECTION AUTOMATIQUE DE L'ID DANS L'URL (ex: entree.html?id=ASTER-MEMBRES-001)
+        // ----------------------------------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scannedId = urlParams.get('id') || urlParams.get('code') || urlParams.get('qr');
+
+            if (scannedId) {
+                validerEntree(scannedId);
+            } else {
+                showErrorScreen("Aucun ID fourni pour la validation.");
+            }
+        });
+    </script>
+    <!-- ======================================================================== -->
+    <!-- FIN DE LA SECTION SCRIPTS                                                -->
+    <!-- ======================================================================== -->
+
+</body>
+</html>
+
+<!-- ============================================================================ -->
+<!-- FIN DU FICHIER : entree.html                                                 -->
+<!-- ============================================================================ -->
