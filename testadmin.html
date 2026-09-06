@@ -246,7 +246,6 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                // Utilise directement m.heure envoyé par l'Apps Script
                 let heureClean = "";
                 if (m.heure) {
                     let hStr = m.heure.toString().trim();
