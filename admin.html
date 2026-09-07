@@ -61,7 +61,7 @@
 
         .badge-in { background-color: #10b981; }
         .badge-out { background-color: #ef4444; }
-        .badge-inscrits { background-color: #0284c7; }
+        .badge-inscrits { background-color: #38bdf8; }
 
         /* Conteneur principal */
         .main-card {
@@ -88,7 +88,7 @@
         }
 
         .search-box:focus {
-            border-color: #0284c7;
+            border-color: #38bdf8;
         }
 
         /* Liste des membres */
@@ -108,6 +108,13 @@
             background: #f8fafc;
             border-radius: 10px;
             border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .member-item:hover {
+            border-color: #38bdf8;
+            background: #f0f9ff;
         }
 
         .member-left {
@@ -161,8 +168,41 @@
 
         .heure-text {
             font-size: 11px;
-            color: #64748b;
         }
+
+        /* Fenêtre Modale (Pop-up détail) - Design repensé */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white; width: 90%; max-width: 420px; border-radius: 28px; padding: 30px 25px;
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.15); animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes scaleUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal img { 
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; 
+            border: 4px solid #38bdf8; box-shadow: 0 8px 16px rgba(56, 189, 248, 0.2); 
+        }
+        .modal h3 { margin: 0 0 2px 0; color: #0f172a; font-size: 22px; font-weight: 800; }
+        
+        .modal-details { 
+            text-align: left; background: #f8fafc; padding: 18px; border-radius: 20px; 
+            margin: 20px 0; font-size: 14px; color: #334155; border: 1px solid #e2e8f0; 
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .modal-details p { margin: 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-details span { font-weight: 700; color: #0f172a; }
+        
+        .btn-close { 
+            width: 100%; padding: 14px; background: #0f172a; color: white; border: none; 
+            border-radius: 16px; font-size: 15px; font-weight: bold; cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .btn-close:hover { background: #334155; }
     </style>
 </head>
 <body>
@@ -173,14 +213,12 @@
 
     <h1>Administration</h1>
 
-    <!-- Badges de comptage globaux -->
     <div class="stats-container">
         <div class="stat-badge">In: <span class="badge-in" id="count-in">0</span></div>
         <div class="stat-badge">Out: <span class="badge-out" id="count-out">0</span></div>
         <div class="stat-badge">Inscrits: <span class="badge-inscrits" id="count-inscrits">0</span></div>
     </div>
 
-    <!-- Carte principale de recherche et liste -->
     <div class="main-card">
         <input type="text" id="search-input" class="search-box" placeholder="Rechercher un membre par nom ou ID..." oninput="filterMembers()">
         
@@ -189,13 +227,28 @@
         </div>
     </div>
 
+    <div id="modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <img id="modal-photo" src="logo.png" alt="Photo" onerror="this.src='logo.png'">
+            <h3 id="modal-name">Nom Membre</h3>
+            <div id="modal-id" style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 5px;">ID</div>
+            
+            <div class="modal-details">
+                <p>📧 Email : <span id="modal-email" style="font-size: 13px; font-weight: 500; color: #0284c7;">--</span></p>
+                <p>📥 Arrivée : <span id="modal-in">--:--</span></p>
+                <p>📤 Départ : <span id="modal-out">--:--</span></p>
+                <p>📌 Statut : <span id="modal-status">--</span></p>
+                <p>💬 Test : <span id="modal-custom">--</span></p>
+            </div>
+            
+            <button class="btn-close" onclick="closeModal()">Fermer</button>
+        </div>
+    </div>
+
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYuWiLA5-jMB9R80HuidPP6NqR3qCXFMHOsAwSCOrt3JU4N5QBhGx-L_YdjJ2-Xuii1g/exec";
         let allMembers = [];
 
-        // ----------------------------------------------------------------------
-        // FONCTION : Récupération dynamique des membres via JSONP
-        // ----------------------------------------------------------------------
         function fetchMembers() {
             const oldScript = document.getElementById('jsonp-script');
             if (oldScript) oldScript.remove();
@@ -204,26 +257,19 @@
             script.id = 'jsonp-script';
             script.src = `${SCRIPT_URL}?action=getmembers&callback=handleResponse&_=` + new Date().getTime();
             
-            // Ajout sécurisé dans le head
             document.head.appendChild(script);
         }
 
-        // ----------------------------------------------------------------------
-        // FONCTION : Traitement de la réponse retournée par Google Apps Script
-        // ----------------------------------------------------------------------
         window.handleResponse = function(data) {
             if (data && data.status === "success" && data.members && data.members.length > 0) {
                 allMembers = data.members;
                 updateStats();
-                filterMembers(); // Applique le filtre actuel ou rafraîchit la liste complète
+                filterMembers();
             } else {
                 document.getElementById("member-list").innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 15px;">Aucun membre trouvé.</p>`;
             }
         };
 
-        // ----------------------------------------------------------------------
-        // FONCTION : Mise à jour des compteurs (In, Out, Inscrits)
-        // ----------------------------------------------------------------------
         function updateStats() {
             let inCount = 0;
             let outCount = 0;
@@ -239,9 +285,6 @@
             document.getElementById("count-inscrits").innerText = allMembers.length;
         }
 
-        // ----------------------------------------------------------------------
-        // FONCTION : Affichage HTML de la liste des membres
-        // ----------------------------------------------------------------------
         function renderList(members) {
             const container = document.getElementById("member-list");
             if (members.length === 0) {
@@ -262,10 +305,17 @@
                 if (stLower.includes("présent") || stLower.includes("present")) badgeClass = "present";
                 if (stLower.includes("sorti")) badgeClass = "sorti";
 
-                let heureDisplay = m.heure ? `<span class="heure-text">${m.heure}</span>` : '';
+                let heureArrivee = (m.heureIn && m.heureIn !== "--:--") ? m.heureIn : "";
+                
+                let heureColor = stLower.includes("sorti") ? "#991b1b" : "#065f46"; 
+                if (!stLower.includes("présent") && !stLower.includes("present") && !stLower.includes("sorti")) {
+                    heureColor = "#64748b";
+                }
+
+                let heureDisplay = heureArrivee ? `<span class="heure-text" style="color: ${heureColor}; font-weight: bold;">${heureArrivee}</span>` : ``;
 
                 return `
-                    <div class="member-item">
+                    <div class="member-item" onclick="openModal('${m.id}')">
                         <div class="member-left">
                             <img src="${photo}" class="member-photo" alt="Photo" onerror="this.src='logo.png'">
                             <div class="member-details">
@@ -282,9 +332,29 @@
             }).join('');
         }
 
-        // ----------------------------------------------------------------------
-        // FONCTION : Filtrage dynamique lors de la recherche
-        // ----------------------------------------------------------------------
+        function openModal(memberId) {
+            const m = allMembers.find(item => item.id === memberId);
+            if (!m) return;
+
+            document.getElementById('modal-photo').src = (m.photoUrl && m.photoUrl.startsWith('http')) ? m.photoUrl : 'logo.png';
+            document.getElementById('modal-name').innerText = m.nom || "Membre";
+            document.getElementById('modal-id').innerText = m.id || "";
+            document.getElementById('modal-email').innerText = m.email || "Non renseigné";
+            
+            document.getElementById('modal-in').innerText = m.heureIn || "--:--";
+            document.getElementById('modal-out').innerText = m.heureOut || "--:--";
+            document.getElementById('modal-status').innerText = m.statut || "Inscrit";
+            
+            // Récupération de ta nouvelle question test (assure-toi que ton Apps Script renvoie bien cette propriété, par ex. m.customQuestion ou m.test)
+            document.getElementById('modal-custom').innerText = m.customQuestion || "Aucune réponse";
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
         function filterMembers() {
             const query = document.getElementById("search-input").value.toLowerCase().trim();
             const filtered = allMembers.filter(m => {
@@ -295,7 +365,6 @@
             renderList(filtered);
         }
 
-        // Lancement immédiat et boucle de rafraîchissement toutes les 5 secondes
         fetchMembers();
         setInterval(fetchMembers, 5000);
     </script>
