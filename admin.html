@@ -170,7 +170,7 @@
             font-size: 11px;
         }
 
-        /* Fenêtre Modale (Pop-up détail) - Design repensé */
+        /* Fenêtre Modale (Pop-up détail) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
@@ -238,7 +238,7 @@
                 <p>📥 Arrivée : <span id="modal-in">--:--</span></p>
                 <p>📤 Départ : <span id="modal-out">--:--</span></p>
                 <p>📌 Statut : <span id="modal-status">--</span></p>
-                <p>💬 Test : <span id="modal-custom">--</span></p>
+                <p>💬 Specification : <span id="modal-custom">--</span></p>
             </div>
             
             <button class="btn-close" onclick="closeModal()">Fermer</button>
@@ -344,8 +344,6 @@
             document.getElementById('modal-in').innerText = m.heureIn || "--:--";
             document.getElementById('modal-out').innerText = m.heureOut || "--:--";
             document.getElementById('modal-status').innerText = m.statut || "Inscrit";
-            
-            // Récupération de ta nouvelle question test (assure-toi que ton Apps Script renvoie bien cette propriété, par ex. m.customQuestion ou m.test)
             document.getElementById('modal-custom').innerText = m.customQuestion || "Aucune réponse";
 
             document.getElementById('modal').classList.add('active');
